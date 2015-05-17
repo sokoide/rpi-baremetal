@@ -1,4 +1,4 @@
-#include "rpi_lib/rpi.h"
+#include "lib/rpi.h"
 #define kFastInterval 200000
 #define kRegularInterval 500000
 #define kSlowInterval 1000000
@@ -26,7 +26,7 @@ void led_off() {
 }
 
 int main(int argc, char const* argv[]) {
-  rpi_init();
+  rpiInit();
 
   gpio[LED_GPFSEL] |= (1 << LED_GPFBIT);
 

@@ -11,8 +11,7 @@ TARGETELF =	hoge.elf
 ASRCS = startup.s \
 
 CSRCS = hoge.c \
-				rpi_lib/rpi_init.c \
-				rpi_lib/bss/clearbss.c \
+				lib/rpi-common.c \
 
 LDS = hoge.lds
 

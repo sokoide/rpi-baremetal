@@ -13,6 +13,7 @@ kernel=hoge.img
 #### About
 * Blink OK LED example on Raspberry Pi2.
 * Used header file for GPIO from http://www.valvers.com/open-software/raspberry-pi/step02-bare-metal-programming-in-c-pt2/
+* Used init code from http://tatsu-zine.com/books/raspi-bm
 This version is not using timer interrupt but using busy loop for intervals.
 
 ##### For Raspberry Pi 1
