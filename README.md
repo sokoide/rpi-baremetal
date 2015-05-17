@@ -10,7 +10,7 @@ kernel=hoge.img
 ```
 
 #### 001_led
-#### About
+##### About
 * Blink OK LED example on Raspberry Pi2.
 * Used header file for GPIO from http://www.valvers.com/open-software/raspberry-pi/step02-bare-metal-programming-in-c-pt2/
 * Used init code from http://tatsu-zine.com/books/raspi-bm
