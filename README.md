@@ -20,3 +20,8 @@ This version is not using timer interrupt but using busy loop for intervals.
 * For B+, Remove -D RPI2 and add -D RPIBPLUS into Makefile.
 * For A/A+/B, Remove -D RPI2 from Makefile.
 
+#### 002_libcstub
+##### About
+* Cstub and printf to memory char by char
+* Howeber, cant debug it with cross gdb due to "Unhandled v6 thumb insn: 4601"
+

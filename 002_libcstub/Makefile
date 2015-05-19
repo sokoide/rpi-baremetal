@@ -1,17 +1,10 @@
-# how to debug with arm simulator with gdb
-# 1. arm-unknown-eabi-gdb
-# 2. target sim
-# 3. load hoge.elf
-# 4. file hoge.elf
-# 5. start
-# 6. disass, si, info r etc
-
 TARGET =	hoge.img
 TARGETELF =	hoge.elf
 ASRCS = startup.s \
 
 CSRCS = hoge.c \
 				lib/rpi-common.c \
+				syscalls.c
 
 LDS = hoge.lds
 
@@ -21,8 +14,9 @@ CROSS = arm-unknown-eabi-
 CC = $(CROSS)gcc
 LD = $(CROSS)ld
 OBJCOPY = $(CROSS)objcopy
-CCFLAGS = -mfloat-abi=soft -mlittle-endian -nostdinc -fno-builtin -c -O2 -std=c11 -D RPI2
-LDFLAGS = -static -nostdlib -T $(LDS)
+CCFLAGS = -mfloat-abi=soft -mfpu=neon-vfpv4 -mlittle-endian -nostartfiles -ffreestanding -fno-builtin -c -O2 -std=c11 -D RPI2
+LIBS = -L/home/sokoide/cross/rpi/arm-unknown-eabi/lib/gcc/arm-unknown-eabi/4.9.1/ -L/home/sokoide/cross/rpi/arm-unknown-eabi/arm-unknown-eabi/lib/
+LDFLAGS = $(LIBS) -lc -lgcc
 
 
 all: $(TARGET)
@@ -33,7 +27,7 @@ all: $(TARGET)
 	$(OBJCOPY) -O binary $< $@
 
 $(TARGETELF): $(OBJS)
-	$(LD) $(LDFLAGS) -T $(LDS) $^ `$(CC) -print-libgcc-file-name` -o $@
+	$(LD) -static -nostartup -T $(LDS) $^ -o $@ $(LDFLAGS)
 
 .c.o:
 	$(CC) $(CCFLAGS) -o $@ $<
