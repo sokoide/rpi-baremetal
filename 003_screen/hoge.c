@@ -8,26 +8,26 @@
 
 int main(int argc, char const* argv[]) {
   rpiInit();
+
   ledBlink(3, kFastInterval);
 
   // init framebuffer
-  if (!FramebufferInitialize()) {
-    ledBlink(10, kSlowInterval);
-    while (true)
-      ;
-  }
+  FramebufferInitialize();
 
-  ledBlink(3, kFastInterval);
-
-  uint16_t color = 0;
-  uint16_t* p = (uint16_t*)FBRequest.pointer;
-  for (int x = 0; x < kWidth; x++) {
+  uint8_t color = 0;
+  while (true) {
+    color = rand() % 8;
+    uint8_t* p = (uint8_t*)fbRequest.fbBaseAddress;
     for (int y = 0; y < kHeight; y++) {
-      *p++ = color++;
+      for (int x = 0; x < kWidth; x++) {
+        *p++ = color;
+        if (x % 8 == 0) {
+          color = rand() % 8;
+        }
+      }
     }
+    wait(kSlowInterval);
   }
-
-  ledBlink(3, kFastInterval);
 
   while (true) {
     ledBlink(3, kFastInterval);

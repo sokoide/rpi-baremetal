@@ -9,9 +9,9 @@
 #include "rpi-mailbox.h"
 #include "rpi-framebuffer.h"
 
-#define kFastInterval 0x2FFFFFUL
-#define kRegularInterval 0x6FFFFFUL
-#define kSlowInterval 0xAFFFFFUL
+#define kFastInterval 0x3FFFFUL
+#define kRegularInterval 0x5FFFFUL
+#define kSlowInterval 0x7FFFFUL
 
 void rpi_init(void);
 
