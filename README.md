@@ -25,3 +25,8 @@ This version is not using timer interrupt but using busy loop for intervals.
 * Cstub and printf to memory char by char
 * Howeber, cant debug it with cross gdb due to "Unhandled v6 thumb insn: 4601"
 
+#### 003_screen
+##### About
+* Get framebuffer address by MailBox and draw random dots
+* It's writing in CPU and slow
+
