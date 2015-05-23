@@ -7,6 +7,8 @@ When RPi starts up, GPU loads bootloader from ROM which loads bootcode.bin which
 Update config.txt and change kernel=... to your boot image.
 ```
 kernel=hoge.img
+disable_overscan=1
+framebuffer_swap=0
 ```
 
 #### 001_led
