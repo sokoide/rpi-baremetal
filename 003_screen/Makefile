@@ -17,7 +17,7 @@ CROSS = arm-unknown-eabi-
 CC = $(CROSS)gcc
 LD = $(CROSS)ld
 OBJCOPY = $(CROSS)objcopy
-CCFLAGS = -mfloat-abi=soft -mfpu=neon-vfpv4 -mlittle-endian -nostartfiles -ffreestanding -fno-builtin -c -O2 -std=c11 -D RPI2
+CCFLAGS = -mfloat-abi=soft -mfpu=neon-vfpv4 -mlittle-endian -nostartfiles -ffreestanding -fno-builtin -c -O3 -std=c11 -D RPI2
 LIBS = -L/home/sokoide/cross/rpi/arm-unknown-eabi/lib/gcc/arm-unknown-eabi/4.9.1/ -L/home/sokoide/cross/rpi/arm-unknown-eabi/arm-unknown-eabi/lib/
 LDFLAGS = $(LIBS) -lc -lgcc
 
