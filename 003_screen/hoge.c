@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define kWidth 1920
-#define kHeight 1080
-
 int main(int argc, char const* argv[]) {
   rpiInit();
 

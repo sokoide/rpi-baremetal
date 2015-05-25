@@ -1,6 +1,0 @@
-!_TAG_FILE_SORTED	2	/0=unsorted, 1=sorted, 2=foldcase/
-FramebufferInitialize	/media/psf/Dropbox/workspace/arm/rpi-baremetal/003_screen/lib/rpi-framebuffer.c	/^bool FramebufferInitialize() {$/;"	f	language:C++
-FramebufferMailboxChannel	/media/psf/Dropbox/workspace/arm/rpi-baremetal/003_screen/lib/rpi-framebuffer.c	/^const unsigned int FramebufferMailboxChannel = 1;$/;"	v	language:C++
-kHeight	/media/psf/Dropbox/workspace/arm/rpi-baremetal/003_screen/hoge.c	7;"	d	language:C++	file:
-kWidth	/media/psf/Dropbox/workspace/arm/rpi-baremetal/003_screen/hoge.c	6;"	d	language:C++	file:
-main	/media/psf/Dropbox/workspace/arm/rpi-baremetal/003_screen/hoge.c	/^int main(int argc, char const* argv[]) {$/;"	f	language:C++

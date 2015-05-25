@@ -4,8 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define kWidth 1920
-#define kHeight 1080
+/* #define kWidth 1920 */
+/* #define kHeight 1080 */
+#define kWidth 640
+#define kHeight 480
 
 // mailbox buffer should be aligned with 16 bytes
 struct FramebufferRequest {
