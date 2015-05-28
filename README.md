@@ -32,3 +32,8 @@ This version is not using timer interrupt but using busy loop for intervals.
 * Get framebuffer address by MailBox and draw random dots
 * It's writing in CPU and slow
 
+#### 004_timer_interrupt
+##### About
+* Dirty sample which uses timer interrupt
+* It redraw every 100ms using timer
+
