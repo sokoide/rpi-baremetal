@@ -37,3 +37,7 @@ This version is not using timer interrupt but using busy loop for intervals.
 * Dirty sample which uses timer interrupt
 * It redraw every 100ms using timer
 
+#### 005_character
+##### About
+* Print characters using hankaku.bin bitmap font
+
