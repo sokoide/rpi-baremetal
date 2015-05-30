@@ -41,3 +41,7 @@ This version is not using timer interrupt but using busy loop for intervals.
 ##### About
 * Print characters using hankaku.bin bitmap font
 
+#### 006_fps
+##### About
+* Print frames per second
+
