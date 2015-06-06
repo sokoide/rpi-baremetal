@@ -30,7 +30,6 @@ This version is not using timer interrupt but using busy loop for intervals.
 #### 003_screen
 ##### About
 * Get framebuffer address by MailBox and draw random dots
-* It's writing in CPU and slow
 
 #### 004_timer_interrupt
 ##### About
