@@ -11,6 +11,62 @@ disable_overscan=1
 framebuffer_swap=0
 ```
 
+### How to setup your cross compile environment
+#### Build ARM cross compiler for OSX/Linux
+* [OSX only] create a case sensitive partition
+* clone the crosstool-ng repo and build it
+```
+mkdir -p /Volumes/AppleHDDCS/cross/src
+cd /Volumes/AppleHDDCS/cross/src
+git clone https://github.com/crosstool-ng/crosstool-ng
+crosstool-ng
+./bootstrap
+./configure
+make
+make install
+```
+* download cross compiler config template
+```
+mkdir -p /Volumes/AppleHDDCS/cross/ct-ng_rpi
+cd /Volumes/AppleHDDCS/cross/ct-ng_rpi
+// download template
+ct-ng arm-unknown-eabi
+```
+* configure ct-ng
+```
+ct-ng menuconfig
+```
+* change these
+```
+* path
+  local tarballs directory -> /Volumes/AppleHDDCS/cross/ct-ng_rpi
+  prerix directory -> /Volumes/AppleHDDCS/cross/rpi/{CT_TARGET}
+* target options
+  disable MMU
+  arch -> ()
+  emit assembly for CPU -> cortex-a7
+  tune -> ()
+  vfp -> neon-vfpv4
+  fpu -> software (nofpu)
+* c compiler
+  gcc version -> 4.8.4 (4.9/5.0 fails to build)
+  disable link libstdc++ statically
+* debug facilities
+  enable gcc
+* companion libraries
+  isl -> 12.2 (14.0 fails)
+```
+* build it ... takes time. It took 12 mins on my macmini core i7 2.6GHz x 4 cores
+```
+ct-ng build
+```
+
+#### Set env var for my makefile
+```
+export PATH="$PATH:/Volumes/AppleHDDCS/cross/rpi/arm-unknown-eabi/bin"
+export CROSSROOT = /Volumes/AppleHDDCS/cross/rpi/arm-unknown-eabi
+```
+
 #### 001_led
 ##### About
 * Blink OK LED example on Raspberry Pi2.
