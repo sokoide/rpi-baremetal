@@ -1,13 +1,13 @@
 #include "rpi.h"
 
-TIMERCTL timerctl[MAX_TIMER];
+TIMERCTL timerctl;
 
-void InitTimer() {
+void InitTimer(FIFO8* fifo) {
   // init timerctl;
+  timerctl.count = 0;
+  timerctl.fifo = fifo;
   for (int i = 0; i < MAX_TIMER; i++) {
-    timerctl[i].count = 0;
-    timerctl[i].timeout = 0;
-    timerctl[i].fifo = NULL;
+    timerctl.timer[i].timeout = 0;
   }
 
   // disable IRQ
@@ -45,10 +45,9 @@ void InitTimer() {
   _enable_IRQ();
 }
 
-void SetTimer(int timerId, int timeout, FIFO8* fifo, unsigned char data) {
+void SetTimer(int timerId, int timeout, unsigned char data) {
   _disable_IRQ();
-  timerctl[timerId].timeout = timeout;
-  timerctl[timerId].fifo = fifo;
-  timerctl[timerId].data = data;
+  timerctl.timer[timerId].timeout = timeout;
+  timerctl.timer[timerId].data = data;
   _enable_IRQ();
 }
