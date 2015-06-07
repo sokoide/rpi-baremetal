@@ -4,88 +4,83 @@
 #include <stdbool.h>
 #include <string.h>
 
-volatile static bool g_interrupt = false;
-volatile static uint32_t g_counter = 0;
-
 // called by _IRQ_interrupt in startup.s
 void IRQ_handler(void) {
-  // disable IRQ
   _disable_IRQ();
 
   if (*INTERRUPT_IRQ_BASIC_PENDING & 0x01 != 0) {
-    // Timer interrupt handler
-    /* timerIRQ_handler(); */
-    g_interrupt = true;
+    for (int i = 0; i < MAX_TIMER; i++) {
+      timerctl[i].count++;
+      if (timerctl[i].timeout > 0) {
+        if (0 == --timerctl[i].timeout) {
+          PutFifo8(timerctl[i].fifo, timerctl[i].data);
+        }
+      }
+    }
     // clear interrupt flag
     *TIMER_IRQ_CLR = 0;
   }
 
-  // enable IRQ
   _enable_IRQ();
 }
 
-void draw_counter() {
+void draw_counter(int y, int counter) {
   char line[256];
 
   // clear the 1st line
-  FillRect(0, 0, kWidth, 16, 0);
+  FillRect(0, y, kWidth, 16, 0);
 
-  sprintf(line, "counter: %d", g_counter);
-  PrintStr(0, 0, "*", 1);
-  PrintStr(16, 0, line, 7);
+  sprintf(line, "counter: %d", counter);
+  PrintStr(0, y, "*", 1);
+  PrintStr(16, y, line, 7);
 }
 
 int main(int argc, char const *argv[]) {
   rpiInit();
   FramebufferInitialize();
-
   _init_vector_table();
+  InitTimer();
 
-  // disable IRQ
-  *INTERRUPT_DISABLE_BASIC_IRQS = 0xffffffff;
-  *INTERRUPT_DISABLE_IRQS1 = 0xffffffff;
-  *INTERRUPT_DISABLE_IRQS2 = 0xffffffff;
-  *INTERRUPT_FIQ_CTRL = 0;
+  FIFO8 fifoTimer;
+  unsigned char bufTimer[64];
+  unsigned char timerData1 = 1;
+  unsigned char timerData2 = 2;
+  uint32_t counter1 = 0;
+  uint32_t counter2 = 0;
+  uint32_t counter3 = 0;
 
-  _disable_IRQ();
+  int timerInterval1 = 1000;
+  int timerInterval2 = 100;
 
-  // set Timer Interrupt
-  *INTERRUPT_ENABLE_BASIC_IRQS = 0x01;
-
-  // stop timer
-  *TIMER_CONTROL &= 0xffffff00;
-
-  // set timer clock -> 1MHz
-  //（0xF9=249: timer clock=250MHz/(249+1)）
-  *TIMER_PREDIVIDER = 0x000000F9;
-
-  // Timer (1000 msec)
-  *TIMER_LOAD = 1000000 - 1;
-  *TIMER_RELOAD = 1000000 - 1;
-
-  // clear IRQ flag
-  *TIMER_IRQ_CLR = 0;
-
-  // start timer
-  *TIMER_CONTROL |= 0x000000A2;
-
-  // enable interrupts
-  *INTERRUPT_ENABLE_BASIC_IRQS = 0x01;
-
-  // enable IRQ
-  _enable_IRQ();
+  InitFifo8(&fifoTimer, sizeof(bufTimer) / sizeof(unsigned char), bufTimer);
+  SetTimer(0, timerInterval1, &fifoTimer, timerData1);
+  SetTimer(1, timerInterval2, &fifoTimer, timerData2);
 
   while (true) {
     _disable_IRQ();
-    g_counter++;
     _wfi();
-    if (true == g_interrupt) {
-      g_interrupt = false;
+    if (StatusFifo8(&fifoTimer) == 0) {
       _enable_IRQ();
-      draw_counter();
-      // g_counter = 0;
     } else {
+      unsigned char data = GetFifo8(&fifoTimer);
       _enable_IRQ();
+
+      switch (data) {
+        case 1:
+          counter1++;
+          SetTimer(0, timerInterval1, &fifoTimer, timerData1);
+          draw_counter(0, counter1);
+          break;
+        case 2:
+          counter2++;
+          SetTimer(1, timerInterval2, &fifoTimer, timerData2);
+          draw_counter(16, counter2);
+          break;
+        case 3:
+          counter3++;
+          draw_counter(32, counter3);
+          break;
+      }
     }
   }
   return 0;

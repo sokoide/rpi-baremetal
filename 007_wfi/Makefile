@@ -10,6 +10,8 @@ CSRCS = hoge.c \
 				lib/rpi-syscall.c \
 				lib/rpi-mailbox.c \
 				lib/rpi-graphics.c \
+				lib/rpi-fifo.c \
+				lib/rpi-timer.c \
 
 LDS = hoge.lds
 
