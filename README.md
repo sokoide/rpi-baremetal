@@ -100,3 +100,8 @@ This version is not using timer interrupt but using busy loop for intervals.
 ##### About
 * Print frames per second
 
+#### 007_wfi
+##### About
+* Use WFI to wait until interrupted
+* Implemented timer which supports up to MAX_TIMER (using an array, not efficient yet)
+
