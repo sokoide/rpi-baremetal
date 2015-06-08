@@ -8,15 +8,27 @@
 void IRQ_handler(void) {
   _disable_IRQ();
 
+  int i;
+
   if (*INTERRUPT_IRQ_BASIC_PENDING & 0x01 != 0) {
-    timerctl.count++;
-    for (int i = 0; i < MAX_TIMER; i++) {
-      if (timerctl.timer[i].timeout > 0) {
-        if (0 == --timerctl.timer[i].timeout) {
-          PutFifo8(timerctl.fifo, timerctl.timer[i].data);
-        }
+    timerctl.counter++;
+
+    // TODO: should use list
+    for (i = 0; i < timerctl.length; i++) {
+      if (timerctl.timer[i].timeout <= timerctl.counter) {
+        PutFifo8(timerctl.fifo, timerctl.timer[i].data);
+        timerctl.timer[i].timeout = 0xffffffff;
       }
     }
+
+    // recalcurate next
+    timerctl.next = 0xffffffff;
+    for (i = 0; i < timerctl.length; i++) {
+      if (timerctl.next > timerctl.timer[i].timeout) {
+        timerctl.next = timerctl.timer[i].timeout;
+      }
+    }
+
     // clear interrupt flag
     *TIMER_IRQ_CLR = 0;
   }
@@ -35,7 +47,7 @@ void draw_counter(int y, int counter) {
   PrintStr(16, y, line, 7);
 }
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const* argv[]) {
   rpiInit();
   FramebufferInitialize();
   _init_vector_table();
@@ -49,15 +61,16 @@ int main(int argc, char const *argv[]) {
   uint32_t counter2 = 0;
   uint32_t counter3 = 0;
 
-  int timerInterval1 = 1000;
+  int timerInterval1 = 100;
   int timerInterval2 = 500;
-  int timerInterval3 = 100;
+  int timerInterval3 = 1000;
+  TIMER *timer1, *timer2, *timer3;
 
   InitFifo8(&fifoTimer, sizeof(bufTimer) / sizeof(unsigned char), bufTimer);
   InitTimer(&fifoTimer);
-  SetTimer(0, timerInterval1, timerData1);
-  SetTimer(1, timerInterval2, timerData2);
-  SetTimer(2, timerInterval3, timerData3);
+  timer1 = SetTimer(NULL, timerInterval1, timerData1);
+  timer2 = SetTimer(NULL, timerInterval2, timerData2);
+  timer3 = SetTimer(NULL, timerInterval3, timerData3);
 
   while (true) {
     _disable_IRQ();
@@ -71,17 +84,17 @@ int main(int argc, char const *argv[]) {
       switch (data) {
         case (const int)timerData1:
           counter1++;
-          SetTimer(0, timerInterval1, timerData1);
+          SetTimer(timer1, timerInterval1, timerData1);
           draw_counter(0, counter1);
           break;
         case (const int)timerData2:
           counter2++;
-          SetTimer(1, timerInterval2, timerData2);
+          SetTimer(timer2, timerInterval2, timerData2);
           draw_counter(16, counter2);
           break;
         case (const int)timerData3:
           counter3++;
-          SetTimer(2, timerInterval3, timerData3);
+          SetTimer(timer3, timerInterval3, timerData3);
           draw_counter(32, counter3);
           break;
       }

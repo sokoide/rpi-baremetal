@@ -124,12 +124,13 @@ int StatusFifo8(FIFO8 *fifo);
 // timer *****
 #define MAX_TIMER 512
 typedef struct _TIMER {
-  int timeout;
+  unsigned int timeout;
   unsigned char data;
 } TIMER;
 
 typedef struct _TIMERCTL {
-  int count;
+  unsigned int counter, next;
+  unsigned int length;  // number of used timers
   FIFO8 *fifo;
   TIMER timer[MAX_TIMER];
 } TIMERCTL;
@@ -137,6 +138,6 @@ typedef struct _TIMERCTL {
 extern TIMERCTL timerctl;
 
 void InitTimer(FIFO8 *fifo);
-void SetTimer(int timerId, int timeout, unsigned char data);
+TIMER *SetTimer(TIMER *timer, unsigned int timeout, unsigned char data);
 
 #endif

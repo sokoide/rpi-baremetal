@@ -4,7 +4,9 @@ TIMERCTL timerctl;
 
 void InitTimer(FIFO8* fifo) {
   // init timerctl;
-  timerctl.count = 0;
+  timerctl.counter = 0;
+  timerctl.next = 0xffffffff;
+  timerctl.length = 0;
   timerctl.fifo = fifo;
   for (int i = 0; i < MAX_TIMER; i++) {
     timerctl.timer[i].timeout = 0;
@@ -45,9 +47,21 @@ void InitTimer(FIFO8* fifo) {
   _enable_IRQ();
 }
 
-void SetTimer(int timerId, int timeout, unsigned char data) {
+TIMER* SetTimer(TIMER* timer, unsigned int timeout, unsigned char data) {
   _disable_IRQ();
-  timerctl.timer[timerId].timeout = timeout;
-  timerctl.timer[timerId].data = data;
+
+  // TODO: should use list
+  if (NULL == timer) {
+    timer = &timerctl.timer[timerctl.length++];
+  }
+
+  timer->timeout = timerctl.counter + timeout;
+  timer->data = data;
+
+  if (timerctl.next > timer->timeout) {
+    timerctl.next = timer->timeout;
+  }
+
   _enable_IRQ();
+  return timer;
 }
