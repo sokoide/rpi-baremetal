@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifdef RPI2
 #define IO_BASE 0x3F000000UL
