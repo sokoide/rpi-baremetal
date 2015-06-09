@@ -94,4 +94,14 @@ TIMER* TimerAt(ListTimer* lst, int index) {
   return &(l->timer);
 }
 
+TIMER* TimerForId(ListTimer* lst, unsigned int id) {
+  ListTimerItem* l = lst->head;
+  for (l = lst->head; NULL != l; l = l->next) {
+    if (l->timer.id == id) {
+      return &(l->timer);
+    }
+  }
+  return NULL;
+}
+
 int CountListTimer(ListTimer* lst) { return lst->count; }

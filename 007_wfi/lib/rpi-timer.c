@@ -56,7 +56,7 @@ int SetTimer(int id, unsigned int timeout, unsigned char data) {
     TIMER t = {.timeout = updatedTimeout, .data = data};
     id = InsertListTimer(&timerctl.listTimer, &t);
   } else {
-    TIMER* t = TimerAt(&timerctl.listTimer, id);
+    TIMER* t = TimerForId(&timerctl.listTimer, id);
     t->timeout = updatedTimeout;
     t->data = data;
 

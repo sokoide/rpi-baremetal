@@ -151,6 +151,7 @@ int InsertListTimer(ListTimer *lst, TIMER *timer);
 bool RemoveListTimer(ListTimer *lst, int id);
 void RemoveNListTimer(ListTimer *lst, int n);
 TIMER *TimerAt(ListTimer *lst, int index);
+TIMER *TimerForId(ListTimer *lst, unsigned int id);
 int CountListTimer(ListTimer *lst);
 void CleanupListTimer(ListTimer *lst);
 

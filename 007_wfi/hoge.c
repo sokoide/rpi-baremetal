@@ -24,9 +24,9 @@ void IRQ_handler(void) {
       }
     }
 
-    // TODO: move first toBeMoved timres to the end
+    // TODO: move first toBeMoved timers to the end
 
-    // recalcurate next
+    // recalculate next
     if (timerctl.listTimer.count > 0) {
       timerctl.next = timerctl.listTimer.head->timer.timeout;
     } else {
@@ -65,9 +65,9 @@ int main(int argc, char const* argv[]) {
   uint32_t counter2 = 0;
   uint32_t counter3 = 0;
 
-  int timerInterval1 = 100;
+  int timerInterval1 = 1000;
   int timerInterval2 = 500;
-  int timerInterval3 = 1000;
+  int timerInterval3 = 100;
   int timer1, timer2, timer3;
 
   InitFifo8(&fifoTimer, sizeof(bufTimer) / sizeof(unsigned char), bufTimer);
