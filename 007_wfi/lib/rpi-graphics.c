@@ -1,10 +1,11 @@
 #include "rpi.h"
 #include <string.h>
 
+FramebufferRequest fbRequest;
 const unsigned int FramebufferMailboxChannel = 1;
 
 bool FramebufferInitialize() {
-  fbRequest.size = sizeof(struct FramebufferRequest);
+  fbRequest.size = sizeof(FramebufferRequest);
   fbRequest.bufferRequestResponseCode = 0;
 
   fbRequest.tag_setPd = 0x00048003;  // tag ID

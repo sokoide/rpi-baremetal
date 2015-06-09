@@ -45,7 +45,7 @@ void clearBss(void);
 #define kHeight 480
 
 // mailbox buffer should be aligned with 16 bytes
-struct FramebufferRequest {
+typedef struct {
   uint32_t size;
   uint32_t bufferRequestResponseCode;
 
@@ -99,7 +99,8 @@ struct FramebufferRequest {
   uint32_t fbSize;
 
   uint32_t tag_end;
-} fbRequest __attribute__((aligned(16)));
+} FramebufferRequest __attribute__((aligned(16)));
+extern FramebufferRequest fbRequest;
 
 bool FramebufferInitialize();
 
@@ -117,7 +118,7 @@ static uint32_t *mailBoxStatusRegister =
     (uint32_t *)(IO_BASE + MAIL_BASE + MAIL_READ + MAIL_STATUS);
 
 // fifo *****
-typedef struct _FIFO8 {
+typedef struct {
   unsigned char *buf;
   int p, q, size, free, flags;
 } FIFO8;
@@ -128,12 +129,12 @@ int StatusFifo8(FIFO8 *fifo);
 
 // timer *****
 #define MAX_TIMER 512
-typedef struct _TIMER {
+typedef struct {
   unsigned int timeout;
   unsigned char data;
 } TIMER;
 
-typedef struct _TIMERCTL {
+typedef struct {
   unsigned int counter, next;
   unsigned int length;  // number of used timers
   FIFO8 *fifo;
@@ -144,6 +145,23 @@ extern TIMERCTL timerctl;
 
 void InitTimer(FIFO8 *fifo);
 TIMER *SetTimer(TIMER *timer, unsigned int timeout, unsigned char data);
+
+// list timer *****
+typedef struct _ListTimerItem {
+  TIMER timer;
+  struct _ListTimerItem *next;
+} ListTimerItem;
+
+typedef struct _ListTimer { ListTimerItem *head; } ListTimer;
+
+extern ListTimer listTimer;
+
+void InitListTimer(ListTimer *lst);
+void PrependListTimer(ListTimer *lst, TIMER *timer);
+void InsertListTimer(ListTimer *lst, TIMER *timer);
+void RemoveListTimer(ListTimer *lst, TIMER *timer);
+TIMER TimerAt(ListTimer *lst, int index);
+int CountListTimer(ListTimer *lst);
 
 #ifdef __cplusplus
 }

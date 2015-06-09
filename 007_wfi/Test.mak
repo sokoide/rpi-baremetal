@@ -2,18 +2,19 @@ CSRCS = teststub.c \
 				lib/rpi-common.c \
 				lib/rpi-mailbox.c \
 				lib/rpi-graphics.c \
-				lib/rpi-fifo.c \
 				lib/rpi-timer.c \
+				lib/rpi-fifo.c \
+				lib/rpi-collection.c \
 
 CCSRCS = ../googletest/src/gtest-all.cc \
 					testmain.cc \
 					lib/rpi-fifo_test.cc \
+					lib/rpi-collection_test.cc \
 
 TARGET = hoge_test
 OBJS = $(CCSRCS:.cc=.o) $(CSRCS:.c=.o) \
 
 CC=clang-3.6 -c -std=c11 -D RPI2
-# CC=gcc-4.8 -c -std=c11 -D RPI2
 CXX=clang++-3.6 -std=c++11 -stdlib=libc++ -c
 LD=clang++-3.6
 CCFLAGS=-g -Wall
