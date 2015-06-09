@@ -132,6 +132,7 @@ int StatusFifo8(FIFO8 *fifo);
 typedef struct {
   unsigned int timeout;
   unsigned char data;
+  unsigned int id;
 } TIMER;
 
 typedef struct {
@@ -152,16 +153,19 @@ typedef struct _ListTimerItem {
   struct _ListTimerItem *next;
 } ListTimerItem;
 
-typedef struct _ListTimer { ListTimerItem *head; } ListTimer;
+typedef struct _ListTimer {
+  ListTimerItem *head;
+  int count;
+} ListTimer;
 
 extern ListTimer listTimer;
 
 void InitListTimer(ListTimer *lst);
-void PrependListTimer(ListTimer *lst, TIMER *timer);
-void InsertListTimer(ListTimer *lst, TIMER *timer);
-void RemoveListTimer(ListTimer *lst, TIMER *timer);
+int InsertListTimer(ListTimer *lst, TIMER *timer);
+bool RemoveListTimer(ListTimer *lst, int id);
 TIMER TimerAt(ListTimer *lst, int index);
 int CountListTimer(ListTimer *lst);
+void CleanupListTimer(ListTimer *lst);
 
 #ifdef __cplusplus
 }
