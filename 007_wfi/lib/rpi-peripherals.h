@@ -1124,16 +1124,20 @@
 #define PCM_RX_PANIC 0x7F0000    // PCM DMA Request Level: RX Panic Level
 #define PCM_TX_PANIC 0x7F000000  // PCM DMA Request Level: TX Panic Level
 
-//#define PCM_TXW \
-  0x1  // PCM Interrupt Enables & Interrupt Status & Clear: TX Write Interrupt
-// Enable
-//#define PCM_RXR \
-  0x2  // PCM Interrupt Enables & Interrupt Status & Clear: RX Read Interrupt
-// Enable
-//#define PCM_TXERR \
-  0x4  // PCM Interrupt Enables & Interrupt Status & Clear: TX Error Interrupt
-//#define PCM_RXERR \
-  0x8  // PCM Interrupt Enables & Interrupt Status & Clear: RX Error Interrupt
+/* #define PCM_TXW \ */
+/*   0x1  // PCM Interrupt Enables & Interrupt Status & Clear: TX Write
+ * Interrupt */
+/* // Enable */
+/* #define PCM_RXR \ */
+/*   0x2  // PCM Interrupt Enables & Interrupt Status & Clear: RX Read Interrupt
+ */
+/* // Enable */
+/* #define PCM_TXERR \ */
+/*   0x4  // PCM Interrupt Enables & Interrupt Status & Clear: TX Error
+ * Interrupt */
+/* #define PCM_RXERR \ */
+/*   0x8  // PCM Interrupt Enables & Interrupt Status & Clear: RX Error
+ * Interrupt */
 
 #define PCM_GRAY_EN 0x1   // PCM Gray Mode Control: Enable GRAY Mode
 #define PCM_GRAY_CLR 0x2  // PCM Gray Mode Control: Clear the GRAY Mode Logic

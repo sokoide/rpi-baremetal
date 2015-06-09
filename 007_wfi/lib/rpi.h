@@ -1,6 +1,10 @@
 #ifndef _RPI_H_
 #define _RPI_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/types.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -141,4 +145,7 @@ extern TIMERCTL timerctl;
 void InitTimer(FIFO8 *fifo);
 TIMER *SetTimer(TIMER *timer, unsigned int timeout, unsigned char data);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
