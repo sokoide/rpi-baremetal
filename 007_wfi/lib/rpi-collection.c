@@ -1,8 +1,6 @@
 #include "rpi.h"
 #include <stdlib.h>
 
-ListTimer listTimer;
-
 void InitListTimer(ListTimer* lst) {
   lst->head = NULL;
   lst->count = 0;
@@ -40,6 +38,19 @@ int InsertListTimer(ListTimer* lst, TIMER* timer) {
   return item->timer.id;
 }
 
+void RemoveNListTimer(ListTimer* lst, int n) {
+  ListTimerItem *l, *tmp;
+  l = lst->head;
+
+  for (int i = 0; i < n; i++) {
+    tmp = l;
+    l = l->next;
+    free(tmp);
+    lst->count--;
+  }
+  lst->head = l;
+}
+
 bool RemoveListTimer(ListTimer* lst, int id) {
   ListTimerItem *l, *prev;
 
@@ -75,26 +86,12 @@ void CleanupListTimer(ListTimer* lst) {
   lst->count = 0;
 }
 
-TIMER TimerAt(ListTimer* lst, int index) {
+TIMER* TimerAt(ListTimer* lst, int index) {
   ListTimerItem* l = lst->head;
   for (int i = 0; i < index; i++) {
     l = l->next;
   }
-  return l->timer;
+  return &(l->timer);
 }
 
-int CountListTimer(ListTimer* lst) {
-  return lst->count;
-  /* int count = 0; */
-  /* ListTimerItem* l = lst->head; */
-
-  /* if (NULL == l) { */
-  /*   return 0; */
-  /* } */
-  /* count++; */
-
-  /* for (; NULL != (l->next); l = l->next) { */
-  /*   count++; */
-  /* } */
-  /* return count; */
-}
+int CountListTimer(ListTimer* lst) { return lst->count; }

@@ -12,6 +12,7 @@ CSRCS = hoge.c \
 				lib/rpi-graphics.c \
 				lib/rpi-fifo.c \
 				lib/rpi-timer.c \
+				lib/rpi-collection.c \
 
 LDS = hoge.lds
 

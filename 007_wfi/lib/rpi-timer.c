@@ -8,9 +8,10 @@ void InitTimer(FIFO8* fifo) {
   timerctl.next = 0xffffffff;
   timerctl.length = 0;
   timerctl.fifo = fifo;
-  for (int i = 0; i < MAX_TIMER; i++) {
-    timerctl.timer[i].timeout = 0;
-  }
+  /* for (int i = 0; i < MAX_TIMER; i++) { */
+  /*   timerctl.timer[i].timeout = 0; */
+  /* } */
+  InitListTimer(&timerctl.listTimer);
 
   // disable IRQ
   *INTERRUPT_DISABLE_BASIC_IRQS = 0xffffffff;
@@ -47,21 +48,25 @@ void InitTimer(FIFO8* fifo) {
   _enable_IRQ();
 }
 
-TIMER* SetTimer(TIMER* timer, unsigned int timeout, unsigned char data) {
+int SetTimer(int id, unsigned int timeout, unsigned char data) {
   _disable_IRQ();
+  unsigned int updatedTimeout = timerctl.counter + timeout;
 
-  // TODO: should use list
-  if (NULL == timer) {
-    timer = &timerctl.timer[timerctl.length++];
+  if (-1 == id) {
+    TIMER t = {.timeout = updatedTimeout, .data = data};
+    id = InsertListTimer(&timerctl.listTimer, &t);
+  } else {
+    TIMER* t = TimerAt(&timerctl.listTimer, id);
+    t->timeout = updatedTimeout;
+    t->data = data;
+
+    // TODO: Move to the right position based on timeout
   }
 
-  timer->timeout = timerctl.counter + timeout;
-  timer->data = data;
-
-  if (timerctl.next > timer->timeout) {
-    timerctl.next = timer->timeout;
+  if (timerctl.next > updatedTimeout) {
+    timerctl.next = updatedTimeout;
   }
 
   _enable_IRQ();
-  return timer;
+  return id;
 }

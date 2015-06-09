@@ -135,19 +135,6 @@ typedef struct {
   unsigned int id;
 } TIMER;
 
-typedef struct {
-  unsigned int counter, next;
-  unsigned int length;  // number of used timers
-  FIFO8 *fifo;
-  TIMER timer[MAX_TIMER];
-} TIMERCTL;
-
-extern TIMERCTL timerctl;
-
-void InitTimer(FIFO8 *fifo);
-TIMER *SetTimer(TIMER *timer, unsigned int timeout, unsigned char data);
-
-// list timer *****
 typedef struct _ListTimerItem {
   TIMER timer;
   struct _ListTimerItem *next;
@@ -158,14 +145,28 @@ typedef struct _ListTimer {
   int count;
 } ListTimer;
 
-extern ListTimer listTimer;
-
+// list timer *****
 void InitListTimer(ListTimer *lst);
 int InsertListTimer(ListTimer *lst, TIMER *timer);
 bool RemoveListTimer(ListTimer *lst, int id);
-TIMER TimerAt(ListTimer *lst, int index);
+void RemoveNListTimer(ListTimer *lst, int n);
+TIMER *TimerAt(ListTimer *lst, int index);
 int CountListTimer(ListTimer *lst);
 void CleanupListTimer(ListTimer *lst);
+
+typedef struct {
+  unsigned int counter, next;
+  unsigned int length;  // number of used timers
+  FIFO8 *fifo;
+  /* TIMER timer[MAX_TIMER]; */
+  ListTimer listTimer;
+} TIMERCTL;
+
+extern TIMERCTL timerctl;
+
+// timer *****
+void InitTimer(FIFO8 *fifo);
+int SetTimer(int id, unsigned int timeout, unsigned char data);
 
 #ifdef __cplusplus
 }

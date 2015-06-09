@@ -6,27 +6,31 @@
 
 // called by _IRQ_interrupt in startup.s
 void IRQ_handler(void) {
-  _disable_IRQ();
+  int toBeMoved = 0;
 
-  int i;
+  _disable_IRQ();
 
   if (*INTERRUPT_IRQ_BASIC_PENDING & 0x01 != 0) {
     timerctl.counter++;
 
-    // TODO: should use list
-    for (i = 0; i < timerctl.length; i++) {
-      if (timerctl.timer[i].timeout <= timerctl.counter) {
-        PutFifo8(timerctl.fifo, timerctl.timer[i].data);
-        timerctl.timer[i].timeout = 0xffffffff;
+    ListTimerItem* item = timerctl.listTimer.head;
+    for (; NULL != item; item = item->next) {
+      if (item->timer.timeout <= timerctl.counter) {
+        PutFifo8(timerctl.fifo, item->timer.data);
+        item->timer.timeout = 0xffffffff;
+        toBeMoved++;
+      } else {
+        break;
       }
     }
 
+    // TODO: move first toBeMoved timres to the end
+
     // recalcurate next
-    timerctl.next = 0xffffffff;
-    for (i = 0; i < timerctl.length; i++) {
-      if (timerctl.next > timerctl.timer[i].timeout) {
-        timerctl.next = timerctl.timer[i].timeout;
-      }
+    if (timerctl.listTimer.count > 0) {
+      timerctl.next = timerctl.listTimer.head->timer.timeout;
+    } else {
+      timerctl.next = 0xffffffff;
     }
 
     // clear interrupt flag
@@ -64,13 +68,13 @@ int main(int argc, char const* argv[]) {
   int timerInterval1 = 100;
   int timerInterval2 = 500;
   int timerInterval3 = 1000;
-  TIMER *timer1, *timer2, *timer3;
+  int timer1, timer2, timer3;
 
   InitFifo8(&fifoTimer, sizeof(bufTimer) / sizeof(unsigned char), bufTimer);
   InitTimer(&fifoTimer);
-  timer1 = SetTimer(NULL, timerInterval1, timerData1);
-  timer2 = SetTimer(NULL, timerInterval2, timerData2);
-  timer3 = SetTimer(NULL, timerInterval3, timerData3);
+  timer1 = SetTimer(-1, timerInterval1, timerData1);
+  timer2 = SetTimer(-1, timerInterval2, timerData2);
+  timer3 = SetTimer(-1, timerInterval3, timerData3);
 
   while (true) {
     _disable_IRQ();
