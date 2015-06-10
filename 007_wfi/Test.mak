@@ -4,12 +4,11 @@ CSRCS = teststub.c \
 				lib/rpi-graphics.c \
 				lib/rpi-timer.c \
 				lib/rpi-fifo.c \
-				lib/rpi-collection.c \
 
 CCSRCS = ../googletest/src/gtest-all.cc \
 					testmain.cc \
 					lib/rpi-fifo_test.cc \
-					lib/rpi-collection_test.cc \
+					lib/rpi-timer_test.cc \
 
 TARGET = hoge_test
 OBJS = $(CCSRCS:.cc=.o) $(CSRCS:.c=.o) \

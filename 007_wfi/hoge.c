@@ -6,29 +6,29 @@
 
 // called by _IRQ_interrupt in startup.s
 void IRQ_handler(void) {
-  int toBeMoved = 0;
-
   _disable_IRQ();
 
   if (*INTERRUPT_IRQ_BASIC_PENDING & 0x01 != 0) {
     timerctl.counter++;
 
-    ListTimerItem* item = timerctl.listTimer.head;
-    for (; NULL != item; item = item->next) {
-      if (item->timer.timeout <= timerctl.counter) {
-        PutFifo8(timerctl.fifo, item->timer.data);
-        item->timer.timeout = 0xffffffff;
-        toBeMoved++;
+    TIMER *p, *prev;
+    for (p = timerctl.head; NULL != p; p = p->next) {
+      if (p->timeout <= timerctl.counter) {
+        PutFifo8(timerctl.fifo, p->data);
+        p->timeout = 0xffffffff;
+        p->used = false;
+        timerctl.length--;
       } else {
         break;
       }
     }
 
-    // TODO: move first toBeMoved timers to the end
+    // removed signaled timers from the list
+    timerctl.head = p;
 
     // recalculate next
-    if (timerctl.listTimer.count > 0) {
-      timerctl.next = timerctl.listTimer.head->timer.timeout;
+    if (timerctl.length > 0) {
+      timerctl.next = timerctl.head->timeout;
     } else {
       timerctl.next = 0xffffffff;
     }
@@ -57,7 +57,7 @@ int main(int argc, char const* argv[]) {
   _init_vector_table();
 
   FIFO8 fifoTimer;
-  unsigned char bufTimer[64];
+  unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 1;
   const unsigned char timerData2 = 2;
   const unsigned char timerData3 = 3;
@@ -70,11 +70,16 @@ int main(int argc, char const* argv[]) {
   int timerInterval3 = 100;
   int timer1, timer2, timer3;
 
-  InitFifo8(&fifoTimer, sizeof(bufTimer) / sizeof(unsigned char), bufTimer);
-  InitTimer(&fifoTimer);
-  timer1 = SetTimer(-1, timerInterval1, timerData1);
-  timer2 = SetTimer(-1, timerInterval2, timerData2);
-  timer3 = SetTimer(-1, timerInterval3, timerData3);
+  InitFifo8(&fifoTimer, sizeof(bufTimerFifo) / sizeof(unsigned char),
+            bufTimerFifo);
+  InitTimerInterrupt(&fifoTimer);
+  timer1 = CreateTimer();
+  timer2 = CreateTimer();
+  timer3 = CreateTimer();
+
+  SetTimer(timer1, timerInterval1, timerData1);
+  SetTimer(timer2, timerInterval2, timerData2);
+  SetTimer(timer3, timerInterval3, timerData3);
 
   while (true) {
     _disable_IRQ();
@@ -104,5 +109,10 @@ int main(int argc, char const* argv[]) {
       }
     }
   }
+
+  // this code is never called
+  DeleteTimer(timer1);
+  DeleteTimer(timer2);
+  DeleteTimer(timer3);
   return 0;
 }

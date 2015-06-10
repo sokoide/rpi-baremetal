@@ -2,16 +2,8 @@
 
 TIMERCTL timerctl;
 
-void InitTimer(FIFO8* fifo) {
-  // init timerctl;
-  timerctl.counter = 0;
-  timerctl.next = 0xffffffff;
-  timerctl.length = 0;
-  timerctl.fifo = fifo;
-  /* for (int i = 0; i < MAX_TIMER; i++) { */
-  /*   timerctl.timer[i].timeout = 0; */
-  /* } */
-  InitListTimer(&timerctl.listTimer);
+void InitTimerInterrupt(FIFO8* fifo) {
+  InitTimerCtl(fifo);
 
   // disable IRQ
   *INTERRUPT_DISABLE_BASIC_IRQS = 0xffffffff;
@@ -48,20 +40,52 @@ void InitTimer(FIFO8* fifo) {
   _enable_IRQ();
 }
 
+void InitTimerCtl(FIFO8* fifo) {
+  timerctl.counter = 0;
+  timerctl.next = 0xffffffff;
+  timerctl.length = 0;
+  timerctl.fifo = fifo;
+  timerctl.head = NULL;
+
+  for (int i = 0; i < MAX_TIMER; i++) {
+    InitTimer(i);
+  }
+}
+
+int CreateTimer() {
+  for (int i = 0; i < MAX_TIMER; i++) {
+    if (false == timerctl.timer[i].used) {
+      timerctl.timer[i].used = true;
+      return i;
+    }
+  }
+  return -1;
+}
+
+void DeleteTimer(int id) {
+  RemoveTimer(id);
+  InitTimer(id);
+}
+
+void InitTimer(int id) {
+  // init
+  timerctl.timer[id].id = id;
+  timerctl.timer[id].timeout = 0xffffffff;
+  timerctl.timer[id].data = 0;
+  timerctl.timer[id].used = false;
+  timerctl.timer[id].next = NULL;
+}
+
 int SetTimer(int id, unsigned int timeout, unsigned char data) {
   _disable_IRQ();
   unsigned int updatedTimeout = timerctl.counter + timeout;
 
-  if (-1 == id) {
-    TIMER t = {.timeout = updatedTimeout, .data = data};
-    id = InsertListTimer(&timerctl.listTimer, &t);
-  } else {
-    TIMER* t = TimerForId(&timerctl.listTimer, id);
-    t->timeout = updatedTimeout;
-    t->data = data;
+  TIMER* t = &timerctl.timer[id];
+  t->timeout = updatedTimeout;
+  t->data = data;
+  t->used = true;
 
-    // TODO: Move to the right position based on timeout
-  }
+  InsertTimer(id);
 
   if (timerctl.next > updatedTimeout) {
     timerctl.next = updatedTimeout;
@@ -69,4 +93,63 @@ int SetTimer(int id, unsigned int timeout, unsigned char data) {
 
   _enable_IRQ();
   return id;
+}
+
+// insert based on timer->timeout
+void InsertTimer(int id) {
+  timerctl.counter++;
+  TIMER* timer = &timerctl.timer[id];
+  timer->used = true;
+  timerctl.length++;
+
+  // if empty
+  if (NULL == timerctl.head) {
+    timerctl.head = timer;
+    timer->next = NULL;
+    return;
+  }
+
+  TIMER *p, *prev;
+  for (p = timerctl.head, prev = NULL; NULL != p; p = p->next) {
+    if (p->timeout >= timer->timeout) {
+      if (NULL == prev) {
+        timerctl.head = timer;
+      } else {
+        prev->next = timer;
+      }
+      timer->next = p;
+      return;
+    }
+    prev = p;
+  }
+  prev->next = timer;
+  timer->next = NULL;
+  return;
+}
+
+bool RemoveTimer(int id) {
+  TIMER *p, *prev;
+
+  for (p = timerctl.head, prev = NULL; NULL != p; p = p->next) {
+    if (p->id == id) {
+      if (NULL == prev) {
+        timerctl.head = p->next;
+      } else {
+        prev->next = p->next;
+      }
+      p->used = false;
+      timerctl.length--;
+      return true;
+    }
+    prev = p;
+  }
+  return false;
+}
+
+TIMER* TimerAt(int index) {
+  TIMER* t = timerctl.head;
+  for (int i = 0; i < index; i++) {
+    t = t->next;
+  }
+  return t;
 }
