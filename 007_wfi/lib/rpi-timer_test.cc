@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "rpi.h"
 
-TEST(CollectionCase, InitTimerCtl) {
+TEST(TimerCase, InitTimerCtl) {
   InitTimerCtl(NULL);
   EXPECT_EQ(0, timerctl.counter);
   EXPECT_EQ(0xffffffff, timerctl.next);
@@ -9,7 +9,7 @@ TEST(CollectionCase, InitTimerCtl) {
   EXPECT_EQ(NULL, timerctl.fifo);
 }
 
-TEST(CollectionCase, InsertTimer1) {
+TEST(TimerCase, InsertTimer1) {
   InitTimerCtl(NULL);
   int id = CreateTimer();
   ASSERT_TRUE(id >= 0);
@@ -25,7 +25,7 @@ TEST(CollectionCase, InsertTimer1) {
   EXPECT_EQ(5, result->data);
 }
 
-TEST(CollectionCase, InsertTimer5) {
+TEST(TimerCase, InsertTimer5) {
   InitTimerCtl(NULL);
   int id1 = CreateTimer();
   int id2 = CreateTimer();
@@ -79,7 +79,7 @@ TEST(CollectionCase, InsertTimer5) {
   EXPECT_EQ(3, result->data);
 }
 
-TEST(CollectionCase, RemoveTimer) {
+TEST(TimerCase, RemoveTimer) {
   InitTimerCtl(NULL);
   int id1 = CreateTimer();
   int id2 = CreateTimer();
