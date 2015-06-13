@@ -52,7 +52,7 @@ ct-ng menuconfig
   gcc version -> 4.8.4 (4.9/5.0 fails to build)
   disable link libstdc++ statically
 * debug facilities
-  enable gcc
+  enable gcc and sim
 * companion libraries
   isl -> 12.2 (14.0 fails)
 ```
@@ -106,5 +106,12 @@ This version is not using timer interrupt but using busy loop for intervals.
 * Use WFI to wait until interrupted
 * Implemented timer which supports up to MAX_TIMER
 * Added unittest runs on build machine in Test.mak
+
+#### 008_context_switch
+##### About
+* Creates 3 threads including the one for main
+* Each thread has its own stack
+* When context switches per timer interrupt, it pushes the current registers for the thread, and save the stack pointer in the thread context
+* main -> other thread is switched by timer interrupt, but task_a/task_b to other is not timer based. Those context switches will be fully automatic in the next example.
 
 
