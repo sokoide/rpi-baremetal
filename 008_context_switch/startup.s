@@ -3,12 +3,13 @@
 
 .global _start
 _start:
-# IRQ/FIQ disabled, Thumb disabled, initialize stack in IRQ mode
+// IRQ/FIQ disabled, Thumb disabled, initialize stack in IRQ mode
 	ldr	r0, =0x000000d2
+  #move ARM register to system register
 	msr	cpsr, r0
 	ldr	sp, =0x00008000
 
-# IRQ/FIQ disabled, Thumb disabled, initialize stack in SVC mode
+// IRQ/FIQ disabled, Thumb disabled, initialize stack in SVC mode
   ldr r0, =0x000000d3
   msr cpsr, r0
   ldr sp, =0x06400000
@@ -23,13 +24,18 @@ _hangup:
 	b .
 
 _IRQ_iterrupt:
+  // store multiple registers full descendent
+  // same as stmdb (decrement before) and push w/ r13!
 	stmfd	r13!, {r0-r12,lr}
 	bl	IRQ_handler
+  // load multiple registerd empty ascending
+  // same as ldfia (increment after) and pop w/ r13!
 	ldmfd	r13!, {r0-r12,lr}
 	subs	pc,lr, #4
 
 .global _enable_IRQ
 _enable_IRQ:
+  // move system to ARM register
 	mrs	r0, cpsr
 	bic r0, r0, #0x80
 	msr cpsr_c,r0
@@ -68,7 +74,7 @@ _vec_IRQ:		.word	_IRQ_iterrupt
 _vec_FIQ:		.word	_hangup
 	.global  _initialize_vector_end
 _initialize_vector_end:
-# dummy instruction to keep initialize_vector_end label
+// dummy instruction to keep initialize_vector_end label
 	mov r0,r0
 
 .global _init_vector_table
@@ -104,11 +110,11 @@ _wfi:
 
 .global _context_switch
 _context_switch:
-  push {r0-r14}
+  // same as stmfd/stmdb !r13, {...}
+  push {r0-r12,r14}
   str sp, [r0]
   ldr sp, [r1]
+  // same as ldmfd/ldmia !r13, {...}
   pop {r0-r12}
-  # lr is dummy (not used)
-  # pc points to the previous lr
-  pop {lr, pc}
+  pop {pc} // pc points to the previous lr
 

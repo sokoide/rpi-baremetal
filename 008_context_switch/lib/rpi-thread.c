@@ -22,15 +22,13 @@ void CreateThread(void *thread_entry) {
   threadctl.thread[id].state = THREAD_CREATED;
   stackBase = (int *)malloc(stackSize * sizeof(int));
   stackBase += stackSize - 1;
-  threadctl.thread[id].stack = stackBase;
+  threadctl.thread[id].stack = stackBase - 13;
   threadctl.thread[id].stackSize = stackSize;
 
   // push default registers into the stack which will be poped in
   // _context_switch
   *threadctl.thread[id].stack =
       (int)thread_entry;  // r14: lr (to be stored in pc)
-  threadctl.thread[id].stack--;
-  *threadctl.thread[id].stack = (int)(stackBase - 14);  // r13: sp
   threadctl.thread[id].stack--;
   *threadctl.thread[id].stack = 0;  // r12
   threadctl.thread[id].stack--;
