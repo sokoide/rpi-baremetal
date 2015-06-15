@@ -95,8 +95,7 @@ _init_vector_table:
 
 .global _get_stack_pointer
 _get_stack_pointer:
-  str sp, [sp]
-  ldr r0, [sp]
+  mov r0, r13
   bx lr
 
 .global _write_memory

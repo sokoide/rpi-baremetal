@@ -14,8 +14,7 @@ _start:
   b .
 
 _get_stack_pointer:
-  str sp, [sp]
-  ldr r0, [sp]
+  mov r0, r13
   mov pc, lr
 
 _write_memory:
