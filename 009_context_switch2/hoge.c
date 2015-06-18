@@ -1,0 +1,211 @@
+#include "lib/rpi.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
+// called by _IRQ_interrupt in startup.s
+int* IRQ_handler(int* sp) {
+  bool shouldDoContextSwitch = false;
+
+  if (*INTERRUPT_IRQ_BASIC_PENDING & 0x01 != 0) {
+    timerctl.counter++;
+
+    TIMER *p, *prev;
+    for (p = timerctl.head; NULL != p; p = p->next) {
+      if (p->timeout <= timerctl.counter) {
+        if (p->data == 0) {
+          shouldDoContextSwitch = true;
+          p->timeout += 5000;
+          timerctl.next = p->timeout;
+        } else {
+          PutFifo8(timerctl.fifo, p->data);
+          p->timeout = 0xffffffff;
+          p->used = false;
+          timerctl.length--;
+        }
+      } else {
+        break;
+      }
+    }
+
+    // removed signaled timers from the list
+    /* timerctl.head = p; */
+
+    // recalculate next
+    /* if (timerctl.length > 0) { */
+    /*   timerctl.next = timerctl.head->timeout; */
+    /* } else { */
+    /*   timerctl.next = 0xffffffff; */
+    /* } */
+
+    // clear interrupt flag
+    *TIMER_IRQ_CLR = 0;
+  }
+
+  char message[512];
+  sprintf(message, "IRQ_handler, sp=%p", sp);
+  FillRect(0, 128, kWidth, 16, 0);
+  PrintStr(0, 128, message, 7);
+
+  if (shouldDoContextSwitch) {
+    unsigned int currentId = threadctl.currentId;
+    int y = 144;
+    sprintf(message, "before ContextSwith(), sp=%p, current=%d:%p", sp,
+            currentId, threadctl.thread[currentId].stack);
+    FillRect(0, y, kWidth, 16, 0);
+    PrintStr(0, y, message, 7);
+    y += 16;
+
+    unsigned int nextId = ContextSwitch(sp);
+
+    sprintf(message, "after ContextSwith(), sp=%p, current=%d:%p, next=%d:%p",
+            sp, currentId, threadctl.thread[currentId].stack, nextId,
+            threadctl.thread[nextId].stack);
+    FillRect(0, y, kWidth, 16, 0);
+    PrintStr(0, y, message, 7);
+    y += 16;
+    sprintf(message, "r0=%x,r1=%x,r2=%x,r3=%x,r4=%x,r5=%x,r6=%x",
+            *(threadctl.thread[nextId].stack),
+            *(threadctl.thread[nextId].stack + 1),
+            *(threadctl.thread[nextId].stack + 2),
+            *(threadctl.thread[nextId].stack + 3),
+            *(threadctl.thread[nextId].stack + 4),
+            *(threadctl.thread[nextId].stack + 5),
+            *(threadctl.thread[nextId].stack + 6));
+    FillRect(0, y, kWidth, 16, 0);
+    PrintStr(0, y, message, 7);
+    y += 16;
+    sprintf(message, "r7=%x,r8=%x,r9=%x,r10=%x,r11=%x,r12=%x,pc=0x%x,cpsr=0x%x",
+            *(threadctl.thread[nextId].stack + 7),
+            *(threadctl.thread[nextId].stack + 8),
+            *(threadctl.thread[nextId].stack + 9),
+            *(threadctl.thread[nextId].stack + 10),
+            *(threadctl.thread[nextId].stack + 11),
+            *(threadctl.thread[nextId].stack + 12),
+            *(threadctl.thread[nextId].stack + 13),
+            *(threadctl.thread[nextId].stack + 14));
+    FillRect(0, y, kWidth, 16, 0);
+    PrintStr(0, y, message, 7);
+
+    if (0xffffffff == nextId) {
+      return NULL;
+    }
+    return (int*)&threadctl.thread[nextId].stack;
+  }
+  return NULL;
+}
+
+void draw_counter(int threadid, int counter) {
+  char line[256];
+  int y = 64 + 16 * threadid;
+  int* sp = (int*)_get_stack_pointer();
+
+  // clear the line
+  FillRect(0, y, kWidth, 16, 0);
+
+  sprintf(line, "[Thread:%d] sp:%p, counter: %d", threadid, sp, counter);
+  PrintStr(0, y, "*", 1);
+  PrintStr(16, y, line, 7);
+}
+
+void task_a() {
+  unsigned int counter = 0;
+  while (true) {
+    draw_counter(1, counter++);
+    /* ContextSwitch(); */
+  }
+}
+
+void task_b() {
+  unsigned int counter = 0;
+  while (true) {
+    draw_counter(2, counter++);
+    /* ContextSwitch(); */
+  }
+}
+
+int main(int argc, char const* argv[]) {
+  unsigned int counter = 0;
+  int timer1;
+  char message[256];
+
+  rpiInit();
+  FramebufferInitialize();
+  _init_vector_table();
+
+  FillRect(0, 0, kWidth, 16, 0);
+  PrintStr(0, 0, "* main started", 7);
+
+  // main -> thread 0
+  InitThread();
+  sprintf(message, "* thread initialized, sp:%p", threadctl.thread[0].stack);
+  FillRect(0, 0, kWidth, 16, 0);
+  PrintStr(0, 0, message, 7);
+
+  FIFO8 fifoTimer;
+  unsigned char bufTimerFifo[64];
+  const unsigned char timerData1 = 0;
+  int timerInterval1 = 5000;
+  unsigned int counter1 = 0;
+
+  // TEST
+  /* char message[256]; */
+  /* const unsigned int stackSize = 4096;  // 4096 * sizeof(int) allocated */
+  /* for (int y = 16; y < 16 * 5; y += 16) { */
+  /*   int* stackBase = (int*)malloc(stackSize * sizeof(int)); */
+  /*   stackBase += stackSize - 1; */
+  /*   sprintf(message, "malloc: %p", stackBase); */
+  /*   FillRect(0, y, kWidth, 16, 0); */
+  /*   PrintStr(0, y, message, 7); */
+  /* } */
+
+  InitFifo8(&fifoTimer, sizeof(bufTimerFifo) / sizeof(unsigned char),
+            bufTimerFifo);
+  InitTimerInterrupt(&fifoTimer);
+  timer1 = CreateTimer();
+
+  // create threads
+  _disable_IRQ();
+  // task_a -> thread 1
+  CreateThread(task_a);
+  sprintf(message, "* thread for task_a created, sp:%p, fp:%p",
+          threadctl.thread[1].stack, task_a);
+  FillRect(0, 0, kWidth, 16, 0);
+  PrintStr(0, 0, message, 7);
+
+  // task_b -> thread 2
+  CreateThread(task_b);
+  sprintf(message, "* thread for task_b created, sp:%p, fp:%p",
+          threadctl.thread[2].stack, task_b);
+  FillRect(0, 16, kWidth, 16, 0);
+  PrintStr(0, 16, message, 7);
+  _enable_IRQ();
+
+  SetTimer(timer1, timerInterval1, timerData1);
+
+  while (true) {
+    /* _disable_IRQ(); */
+    /* _wfi(); */
+    /* _enable_IRQ(); */
+    counter1++;
+    draw_counter(0, counter1);
+    /* if (StatusFifo8(&fifoTimer) == 0) { */
+    /*   _enable_IRQ(); */
+    /* } else { */
+    /*   unsigned char data = GetFifo8(&fifoTimer); */
+    /*   _enable_IRQ(); */
+
+    /*   switch (data) { */
+    /*     case (const int)timerData1: */
+    /*       counter1++; */
+    /*       SetTimer(timer1, timerInterval1, timerData1); */
+    /*       draw_counter(0, counter1); */
+    /*       ContextSwitch(); */
+    /*       break; */
+    /*   } */
+    /* } */
+  }
+
+  return 0;
+}
