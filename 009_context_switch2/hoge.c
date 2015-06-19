@@ -17,7 +17,7 @@ int* IRQ_handler(int lr, int sp) {
         if (p->data == 0) {
           shouldDoContextSwitch = true;
           p->timeout = timerctl.counter + 1000;
-          timerctl.next = p->timeout;
+          timerctl.length--;
         } else {
           PutFifo8(timerctl.fifo, p->data);
           p->timeout = 0xffffffff;
@@ -30,14 +30,18 @@ int* IRQ_handler(int lr, int sp) {
     }
 
     // removed signaled timers from the list
-    /* timerctl.head = p; */
+    timerctl.head = p;
 
     // recalculate next
-    /* if (timerctl.length > 0) { */
-    /*   timerctl.next = timerctl.head->timeout; */
-    /* } else { */
-    /*   timerctl.next = 0xffffffff; */
-    /* } */
+    if (timerctl.length > 0) {
+      timerctl.next = timerctl.head->timeout;
+    } else {
+      timerctl.next = 0xffffffff;
+    }
+
+    if (true == shouldDoContextSwitch) {
+      InsertTimer(0);
+    }
   }
 
   char message[512];
@@ -132,8 +136,8 @@ void task_b() {
 }
 
 int main(int argc, char const* argv[]) {
-  unsigned int counter = 0;
   int timer1;
+  int timer2;
   char message[256];
 
   rpiInit();
@@ -152,13 +156,16 @@ int main(int argc, char const* argv[]) {
   FIFO8 fifoTimer;
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 0;
+  const unsigned char timerData2 = 1;
   int timerInterval1 = 1000;
-  unsigned int counter1 = 0;
+  int timerInterval2 = 10;
+  unsigned int counter2 = 0;
 
   InitFifo8(&fifoTimer, sizeof(bufTimerFifo) / sizeof(unsigned char),
             bufTimerFifo);
   InitTimerInterrupt(&fifoTimer);
   timer1 = CreateTimer();
+  timer2 = CreateTimer();
 
   // create threads
   _disable_IRQ();
@@ -178,28 +185,27 @@ int main(int argc, char const* argv[]) {
   _enable_IRQ();
 
   SetTimer(timer1, timerInterval1, timerData1);
+  SetTimer(timer2, timerInterval2, timerData2);
 
   while (true) {
     _disable_IRQ();
     _wfi();
     _enable_IRQ();
-    counter1++;
-    draw_counter(0, counter1);
-    /* if (StatusFifo8(&fifoTimer) == 0) { */
-    /*   _enable_IRQ(); */
-    /* } else { */
-    /*   unsigned char data = GetFifo8(&fifoTimer); */
-    /*   _enable_IRQ(); */
 
-    /*   switch (data) { */
-    /*     case (const int)timerData1: */
-    /*       counter1++; */
-    /*       SetTimer(timer1, timerInterval1, timerData1); */
-    /*       draw_counter(0, counter1); */
-    /*       ContextSwitch(); */
-    /*       break; */
-    /*   } */
-    /* } */
+    if (StatusFifo8(&fifoTimer) == 0) {
+      _enable_IRQ();
+    } else {
+      unsigned char data = GetFifo8(&fifoTimer);
+      _enable_IRQ();
+
+      switch (data) {
+        case (const int)timerData2:
+          counter2++;
+          SetTimer(timer2, timerInterval2, timerData2);
+          draw_counter(0, counter2);
+          break;
+      }
+    }
   }
 
   return 0;

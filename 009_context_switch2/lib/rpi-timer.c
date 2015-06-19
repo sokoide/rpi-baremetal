@@ -97,7 +97,6 @@ int SetTimer(int id, unsigned int timeout, unsigned char data) {
 
 // insert based on timer->timeout
 void InsertTimer(int id) {
-  timerctl.counter++;
   TIMER* timer = &timerctl.timer[id];
   timer->used = true;
   timerctl.length++;
