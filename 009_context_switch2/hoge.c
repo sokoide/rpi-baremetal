@@ -80,7 +80,8 @@ int* IRQ_handler(int lr, int sp) {
   FillRect(0, y, kWidth, 16, 0);
   PrintStr(0, y, message, 7);
   y += 16;
-  sprintf(message, "r7=%x,r8=%x,r9=%x,r10=%x,r11=%x,r12=%x,pc=0x%x,cpsr=0x%x",
+  sprintf(message,
+          "r7=%x,r8=%x,r9=%x,r10=%x,r11=%x,r12=%x,lr=0x%x,pc=0x%x,cpsr=0x%x",
           *(threadctl.thread[nextId].stack + 7),
           *(threadctl.thread[nextId].stack + 8),
           *(threadctl.thread[nextId].stack + 9),
@@ -88,7 +89,8 @@ int* IRQ_handler(int lr, int sp) {
           *(threadctl.thread[nextId].stack + 11),
           *(threadctl.thread[nextId].stack + 12),
           *(threadctl.thread[nextId].stack + 13),
-          *(threadctl.thread[nextId].stack + 14));
+          *(threadctl.thread[nextId].stack + 14),
+          *(threadctl.thread[nextId].stack + 15));
   FillRect(0, y, kWidth, 16, 0);
   PrintStr(0, y, message, 7);
 

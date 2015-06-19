@@ -29,21 +29,21 @@ void CreateThread(void *thread_entry) {
   // _context_switch
   *threadctl.thread[id].stack-- = 0x00000093;  // cpsr =IRQ enabled/FIQ & Thumb
                                                // disabled/Processor mode = SVC
-  *threadctl.thread[id].stack-- =
-      (int)thread_entry;              // r14: lr (to be stored in pc)
-  *threadctl.thread[id].stack-- = 0;  // r12
-  *threadctl.thread[id].stack-- = 0;  // r11
-  *threadctl.thread[id].stack-- = 0;  // r10
-  *threadctl.thread[id].stack-- = 0;  // r9
-  *threadctl.thread[id].stack-- = 0;  // r8
-  *threadctl.thread[id].stack-- = 0;  // r7
-  *threadctl.thread[id].stack-- = 0;  // r6
-  *threadctl.thread[id].stack-- = 0;  // r5
-  *threadctl.thread[id].stack-- = 0;  // r4
-  *threadctl.thread[id].stack-- = 0;  // r3
-  *threadctl.thread[id].stack-- = 0;  // r2
-  *threadctl.thread[id].stack-- = 0;  // r1
-  *threadctl.thread[id].stack = 0;    // r0
+  *threadctl.thread[id].stack-- = (int)thread_entry;  // r15: pc
+  *threadctl.thread[id].stack-- = 0;                  // r14: lr
+  *threadctl.thread[id].stack-- = 0;                  // r12
+  *threadctl.thread[id].stack-- = 0;                  // r11
+  *threadctl.thread[id].stack-- = 0;                  // r10
+  *threadctl.thread[id].stack-- = 0;                  // r9
+  *threadctl.thread[id].stack-- = 0;                  // r8
+  *threadctl.thread[id].stack-- = 0;                  // r7
+  *threadctl.thread[id].stack-- = 0;                  // r6
+  *threadctl.thread[id].stack-- = 0;                  // r5
+  *threadctl.thread[id].stack-- = 0;                  // r4
+  *threadctl.thread[id].stack-- = 0;                  // r3
+  *threadctl.thread[id].stack-- = 0;                  // r2
+  *threadctl.thread[id].stack-- = 0;                  // r1
+  *threadctl.thread[id].stack = 0;                    // r0
   // don't do stack--!
 }
 
@@ -61,7 +61,7 @@ unsigned int ContextSwitch(int sp) {
 
   char message[512];
   // get current sp
-  threadctl.thread[currentId].stack = ((unsigned int *)sp) - 15;
+  threadctl.thread[currentId].stack = ((unsigned int *)sp) - 16;
 
   sprintf(message, "during ContextSwith(), sp=%x, current=%d:%p, next=%d:%p",
           sp, currentId, threadctl.thread[currentId].stack, nextId,

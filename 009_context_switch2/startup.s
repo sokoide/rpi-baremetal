@@ -64,66 +64,70 @@ _IRQ_interrupt_context_switch:
   pop {r1-r3} // restore spsr, user mode sp, lr
 
   // save registers in user mode stack
+  // r1: user mode cpsr
   // r2: user mode sp
   // r3: user mode lr
   sub r2, r2, #4
   str r1, [r2] // spsr
 
-  ldr r3, [r13, #4*13]
+  ldr r4, [r13, #4*13]
   sub r2, r2, #4
-  str r3, [r2] // user mode pc (r14_irq)
+  str r4, [r2] // user mode pc (r14_irq)
 
-  ldr r3, [r13, #4*12]
   sub r2, r2, #4
-  str r3, [r2] // user mode r12
+  str r3, [r2] // user mode lr
 
-  ldr r3, [r13, #4*11]
+  ldr r4, [r13, #4*12]
   sub r2, r2, #4
-  str r3, [r2] // user mode r11
+  str r4, [r2] // user mode r12
 
-  ldr r3, [r13, #4*10]
+  ldr r4, [r13, #4*11]
   sub r2, r2, #4
-  str r3, [r2] // user mode r10
+  str r4, [r2] // user mode r11
 
-  ldr r3, [r13, #4*9]
+  ldr r4, [r13, #4*10]
   sub r2, r2, #4
-  str r3, [r2] // user mode r9
+  str r4, [r2] // user mode r10
 
-  ldr r3, [r13, #4*8]
+  ldr r4, [r13, #4*9]
   sub r2, r2, #4
-  str r3, [r2] // user mode r8
+  str r4, [r2] // user mode r9
 
-  ldr r3, [r13, #4*7]
+  ldr r4, [r13, #4*8]
   sub r2, r2, #4
-  str r3, [r2] // user mode r7
+  str r4, [r2] // user mode r8
 
-  ldr r3, [r13, #4*6]
+  ldr r4, [r13, #4*7]
   sub r2, r2, #4
-  str r3, [r2] // user mode r6
+  str r4, [r2] // user mode r7
 
-  ldr r3, [r13, #4*5]
+  ldr r4, [r13, #4*6]
   sub r2, r2, #4
-  str r3, [r2] // user mode r5
+  str r4, [r2] // user mode r6
 
-  ldr r3, [r13, #4*4]
+  ldr r4, [r13, #4*5]
   sub r2, r2, #4
-  str r3, [r2] // user mode r4
+  str r4, [r2] // user mode r5
 
-  ldr r3, [r13, #4*3]
+  ldr r4, [r13, #4*4]
   sub r2, r2, #4
-  str r3, [r2] // user mode r3
+  str r4, [r2] // user mode r4
 
-  ldr r3, [r13, #4*2]
+  ldr r4, [r13, #4*3]
   sub r2, r2, #4
-  str r3, [r2] // user mode r2
+  str r4, [r2] // user mode r3
 
-  ldr r3, [r13, #4*1]
+  ldr r4, [r13, #4*2]
   sub r2, r2, #4
-  str r3, [r2] // user mode r1
+  str r4, [r2] // user mode r2
 
-  ldr r3, [r13]
+  ldr r4, [r13, #4*1]
   sub r2, r2, #4
-  str r3, [r2] // user mode r0
+  str r4, [r2] // user mode r1
+
+  ldr r4, [r13]
+  sub r2, r2, #4
+  str r4, [r2] // user mode r0
 
   mov r4, sp // r4 <- r13_irq
 
@@ -132,26 +136,27 @@ _IRQ_interrupt_context_switch:
   //-- svc mode
   // change user mode stack to next thread's stack
   mov sp, r0
-  // push saved pc into r13_irq (r4)
-  ldr r2, [sp, #4*13] // user mode lr
+  // push into r13_irq (r4)
+  ldr r2, [sp, #4*14] // user mode pc
   sub r4, r4, #4
   str r2, [r4]
-  ldr r2, [sp, #4*14] // spsr
+  ldr r2, [sp, #4*15] // spsr
   sub r4, r4, #4
   str r2, [r4]
   // restore registers
   pop {r0-r12,lr}
-  add sp, sp, #4 // pop spsr
+  add sp, sp, #4*2 // pop pc, spsr
 
   cps #0x12          ;@ irq mode
   //-- irq mode
-  sub sp, sp, #8
-  pop {r0, lr}
+  sub sp, sp, #4*2
+  pop {lr}
   // restore spsr
-  msr spsr, r0 // r0 -> spsr
+  msr spsr, lr // lr -> spsr
+  // restore lr (user mode pc)
+  pop {lr}
   // discard pushed registers
-  add r13, r13, #4*15
-  bl _enable_IRQ
+  add r13, r13, #4*14
   // movs pc, * ... mov's' pc restores status register
   movs pc, lr
 
