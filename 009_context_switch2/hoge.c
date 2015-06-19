@@ -5,7 +5,7 @@
 #include <string.h>
 
 // called by _IRQ_interrupt in startup.s
-int* IRQ_handler(int* sp) {
+int* IRQ_handler(int lr, int sp) {
   bool shouldDoContextSwitch = false;
 
   if (*INTERRUPT_IRQ_BASIC_PENDING & 0x01 != 0) {
@@ -16,7 +16,7 @@ int* IRQ_handler(int* sp) {
       if (p->timeout <= timerctl.counter) {
         if (p->data == 0) {
           shouldDoContextSwitch = true;
-          p->timeout += 5000;
+          p->timeout = timerctl.counter + 5000;
           timerctl.next = p->timeout;
         } else {
           PutFifo8(timerctl.fifo, p->data);
@@ -38,62 +38,68 @@ int* IRQ_handler(int* sp) {
     /* } else { */
     /*   timerctl.next = 0xffffffff; */
     /* } */
-
-    // clear interrupt flag
-    *TIMER_IRQ_CLR = 0;
   }
 
   char message[512];
-  sprintf(message, "IRQ_handler, sp=%p", sp);
-  FillRect(0, 128, kWidth, 16, 0);
-  PrintStr(0, 128, message, 7);
 
-  if (shouldDoContextSwitch) {
-    unsigned int currentId = threadctl.currentId;
-    int y = 144;
-    sprintf(message, "before ContextSwith(), sp=%p, current=%d:%p", sp,
-            currentId, threadctl.thread[currentId].stack);
-    FillRect(0, y, kWidth, 16, 0);
-    PrintStr(0, y, message, 7);
-    y += 16;
-
-    unsigned int nextId = ContextSwitch(sp);
-
-    sprintf(message, "after ContextSwith(), sp=%p, current=%d:%p, next=%d:%p",
-            sp, currentId, threadctl.thread[currentId].stack, nextId,
-            threadctl.thread[nextId].stack);
-    FillRect(0, y, kWidth, 16, 0);
-    PrintStr(0, y, message, 7);
-    y += 16;
-    sprintf(message, "r0=%x,r1=%x,r2=%x,r3=%x,r4=%x,r5=%x,r6=%x",
-            *(threadctl.thread[nextId].stack),
-            *(threadctl.thread[nextId].stack + 1),
-            *(threadctl.thread[nextId].stack + 2),
-            *(threadctl.thread[nextId].stack + 3),
-            *(threadctl.thread[nextId].stack + 4),
-            *(threadctl.thread[nextId].stack + 5),
-            *(threadctl.thread[nextId].stack + 6));
-    FillRect(0, y, kWidth, 16, 0);
-    PrintStr(0, y, message, 7);
-    y += 16;
-    sprintf(message, "r7=%x,r8=%x,r9=%x,r10=%x,r11=%x,r12=%x,pc=0x%x,cpsr=0x%x",
-            *(threadctl.thread[nextId].stack + 7),
-            *(threadctl.thread[nextId].stack + 8),
-            *(threadctl.thread[nextId].stack + 9),
-            *(threadctl.thread[nextId].stack + 10),
-            *(threadctl.thread[nextId].stack + 11),
-            *(threadctl.thread[nextId].stack + 12),
-            *(threadctl.thread[nextId].stack + 13),
-            *(threadctl.thread[nextId].stack + 14));
-    FillRect(0, y, kWidth, 16, 0);
-    PrintStr(0, y, message, 7);
-
-    if (0xffffffff == nextId) {
-      return NULL;
-    }
-    return (int*)&threadctl.thread[nextId].stack;
+  if (false == shouldDoContextSwitch) {
+    // clear interrupt flag
+    *TIMER_IRQ_CLR = 0;
+    return NULL;
   }
-  return NULL;
+  unsigned int currentId = threadctl.currentId;
+  int y = 128;
+
+  sprintf(message, "IRQ_handler, lr=0x%x, sp=0x%x", lr, sp);
+  FillRect(0, y, kWidth, 16, 0);
+  PrintStr(0, y, message, 7);
+  y += 16;
+
+  sprintf(message, "before ContextSwith(), sp=0x%x, current=%d:%p", sp,
+          currentId, threadctl.thread[currentId].stack);
+  FillRect(0, y, kWidth, 16, 0);
+  PrintStr(0, y, message, 7);
+  y += 16;
+
+  unsigned int nextId = ContextSwitch(sp);
+
+  sprintf(message, "after ContextSwith(), sp=%x, current=%d:%p, next=%d:%p", sp,
+          currentId, threadctl.thread[currentId].stack, nextId,
+          threadctl.thread[nextId].stack);
+  FillRect(0, y, kWidth, 16, 0);
+  PrintStr(0, y, message, 7);
+  y += 16;
+  sprintf(message, "r0=%x,r1=%x,r2=%x,r3=%x,r4=%x,r5=%x,r6=%x",
+          *(threadctl.thread[nextId].stack),
+          *(threadctl.thread[nextId].stack + 1),
+          *(threadctl.thread[nextId].stack + 2),
+          *(threadctl.thread[nextId].stack + 3),
+          *(threadctl.thread[nextId].stack + 4),
+          *(threadctl.thread[nextId].stack + 5),
+          *(threadctl.thread[nextId].stack + 6));
+  FillRect(0, y, kWidth, 16, 0);
+  PrintStr(0, y, message, 7);
+  y += 16;
+  sprintf(message, "r7=%x,r8=%x,r9=%x,r10=%x,r11=%x,r12=%x,pc=0x%x,cpsr=0x%x",
+          *(threadctl.thread[nextId].stack + 7),
+          *(threadctl.thread[nextId].stack + 8),
+          *(threadctl.thread[nextId].stack + 9),
+          *(threadctl.thread[nextId].stack + 10),
+          *(threadctl.thread[nextId].stack + 11),
+          *(threadctl.thread[nextId].stack + 12),
+          *(threadctl.thread[nextId].stack + 13),
+          *(threadctl.thread[nextId].stack + 14));
+  FillRect(0, y, kWidth, 16, 0);
+  PrintStr(0, y, message, 7);
+
+  if (0xffffffff == nextId) {
+    // clear interrupt flag
+    *TIMER_IRQ_CLR = 0;
+    return NULL;
+  }
+  // clear interrupt flag
+  *TIMER_IRQ_CLR = 0;
+  return threadctl.thread[nextId].stack;
 }
 
 void draw_counter(int threadid, int counter) {
@@ -104,7 +110,7 @@ void draw_counter(int threadid, int counter) {
   // clear the line
   FillRect(0, y, kWidth, 16, 0);
 
-  sprintf(line, "[Thread:%d] sp:%p, counter: %d", threadid, sp, counter);
+  sprintf(line, "[Thread:%d] counter: %d", threadid, counter);
   PrintStr(0, y, "*", 1);
   PrintStr(16, y, line, 7);
 }
@@ -112,6 +118,9 @@ void draw_counter(int threadid, int counter) {
 void task_a() {
   unsigned int counter = 0;
   while (true) {
+    _disable_IRQ();
+    _wfi();
+    _enable_IRQ();
     draw_counter(1, counter++);
     /* ContextSwitch(); */
   }
@@ -120,6 +129,9 @@ void task_a() {
 void task_b() {
   unsigned int counter = 0;
   while (true) {
+    _disable_IRQ();
+    _wfi();
+    _enable_IRQ();
     draw_counter(2, counter++);
     /* ContextSwitch(); */
   }
@@ -146,7 +158,7 @@ int main(int argc, char const* argv[]) {
   FIFO8 fifoTimer;
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 0;
-  int timerInterval1 = 5000;
+  int timerInterval1 = 10000;
   unsigned int counter1 = 0;
 
   // TEST
@@ -169,14 +181,14 @@ int main(int argc, char const* argv[]) {
   _disable_IRQ();
   // task_a -> thread 1
   CreateThread(task_a);
-  sprintf(message, "* thread for task_a created, sp:%p, fp:%p",
+  sprintf(message, "* thread for task_a created, sp:%x, fp:%p",
           threadctl.thread[1].stack, task_a);
   FillRect(0, 0, kWidth, 16, 0);
   PrintStr(0, 0, message, 7);
 
   // task_b -> thread 2
   CreateThread(task_b);
-  sprintf(message, "* thread for task_b created, sp:%p, fp:%p",
+  sprintf(message, "* thread for task_b created, sp:%x, fp:%p",
           threadctl.thread[2].stack, task_b);
   FillRect(0, 16, kWidth, 16, 0);
   PrintStr(0, 16, message, 7);
@@ -185,9 +197,9 @@ int main(int argc, char const* argv[]) {
   SetTimer(timer1, timerInterval1, timerData1);
 
   while (true) {
-    /* _disable_IRQ(); */
-    /* _wfi(); */
-    /* _enable_IRQ(); */
+    _disable_IRQ();
+    _wfi();
+    _enable_IRQ();
     counter1++;
     draw_counter(0, counter1);
     /* if (StatusFifo8(&fifoTimer) == 0) { */

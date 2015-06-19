@@ -47,7 +47,7 @@ void CreateThread(void *thread_entry) {
   // don't do stack--!
 }
 
-unsigned int ContextSwitch(int *sp) {
+unsigned int ContextSwitch(int sp) {
   if (threadctl.length <= 1) {
     return 0xffffffff;
   }
@@ -61,33 +61,17 @@ unsigned int ContextSwitch(int *sp) {
 
   char message[512];
   // get current sp
-  threadctl.thread[currentId].stack = sp - 14;
+  threadctl.thread[currentId].stack = ((unsigned int *)sp) - 15;
 
-  sprintf(message, "during ContextSwith(), sp=%p, current=%d:%p, next=%d:%p",
+  sprintf(message, "during ContextSwith(), sp=%x, current=%d:%p, next=%d:%p",
           sp, currentId, threadctl.thread[currentId].stack, nextId,
           threadctl.thread[nextId].stack);
   FillRect(0, 32, kWidth, 16, 0);
   PrintStr(0, 32, message, 7);
 
-  /*
-    if (NULL != threadctl.thread[currentId].stack &&
-        NULL != threadctl.thread[nextId].stack) {
-      sprintf(message, "%d jumping from th:%d@%p to th:%d@%p", timerctl.counter,
-              currentId, *threadctl.thread[currentId].stack, nextId,
-              *threadctl.thread[nextId].stack);
-    } else {
-      sprintf(message, "%d jumping from th:%d@%p to th:%d", timerctl.counter,
-              currentId, *threadctl.thread[currentId].stack, nextId);
-    }
-    FillRect(0, 16, kWidth, 16, 0);
-    PrintStr(0, 16, message, 7);
-  */
-
   // do context switch
   threadctl.thread[nextId].state = THREAD_RUNNING;
   threadctl.thread[currentId].state = THREAD_WAITING;
   threadctl.currentId = nextId;
-  /* _context_switch(&threadctl.thread[currentId].stack, */
-  /*                 &threadctl.thread[nextId].stack); */
   return nextId;
 }

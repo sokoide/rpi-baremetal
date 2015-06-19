@@ -40,7 +40,7 @@ _IRQ_iterrupt:
   push {r0-r2} // save spsr, user mode sp, lr
 
   // call IRQ_hander(user-mode-sp)
-  mov r0, r1
+  mov r0, r2
 	bl	IRQ_handler
   cmp r0, #0
   bne _IRQ_interrupt_context_switch
@@ -67,11 +67,10 @@ _IRQ_interrupt_context_switch:
   // r2: user mode sp
   // r3: user mode lr
   sub r2, r2, #4
-  ldr r1, [r13, #4*14]
   str r1, [r2] // spsr
 
-  sub r2, r2, #4
   ldr r3, [r13, #4*13]
+  sub r2, r2, #4
   str r3, [r2] // user mode pc (r14_irq)
 
   ldr r3, [r13, #4*12]
@@ -134,13 +133,15 @@ _IRQ_interrupt_context_switch:
   // change user mode stack to next thread's stack
   mov sp, r0
   // push saved pc into r13_irq (r4)
-  ldr r2, [sp, #4*14] // spsr
-  sub r4, r4, #4
   ldr r2, [sp, #4*13] // user mode lr
+  sub r4, r4, #4
+  str r2, [r4]
+  ldr r2, [sp, #4*14] // spsr
   sub r4, r4, #4
   str r2, [r4]
   // restore registers
   pop {r0-r12,lr}
+  add sp, sp, #4 // pop spsr
 
   cps #0x12          ;@ irq mode
   //-- irq mode

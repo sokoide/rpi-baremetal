@@ -163,7 +163,7 @@ extern TIMERCTL timerctl;
 #define MAX_THREADS 1024
 void InitThread();
 void CreateThread(void *thread_entry);
-unsigned int ContextSwitch(int *sp);
+unsigned int ContextSwitch(int sp);
 
 typedef enum {
   THREAD_NONE,
