@@ -16,7 +16,7 @@ int* IRQ_handler(int lr, int sp) {
       if (p->timeout <= timerctl.counter) {
         if (p->data == 0) {
           shouldDoContextSwitch = true;
-          p->timeout = timerctl.counter + 5000;
+          p->timeout = timerctl.counter + 1000;
           timerctl.next = p->timeout;
         } else {
           PutFifo8(timerctl.fifo, p->data);
@@ -120,22 +120,14 @@ void draw_counter(int threadid, int counter) {
 void task_a() {
   unsigned int counter = 0;
   while (true) {
-    _disable_IRQ();
-    _wfi();
-    _enable_IRQ();
     draw_counter(1, counter++);
-    /* ContextSwitch(); */
   }
 }
 
 void task_b() {
   unsigned int counter = 0;
   while (true) {
-    _disable_IRQ();
-    _wfi();
-    _enable_IRQ();
     draw_counter(2, counter++);
-    /* ContextSwitch(); */
   }
 }
 
@@ -160,19 +152,8 @@ int main(int argc, char const* argv[]) {
   FIFO8 fifoTimer;
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 0;
-  int timerInterval1 = 10000;
+  int timerInterval1 = 1000;
   unsigned int counter1 = 0;
-
-  // TEST
-  /* char message[256]; */
-  /* const unsigned int stackSize = 4096;  // 4096 * sizeof(int) allocated */
-  /* for (int y = 16; y < 16 * 5; y += 16) { */
-  /*   int* stackBase = (int*)malloc(stackSize * sizeof(int)); */
-  /*   stackBase += stackSize - 1; */
-  /*   sprintf(message, "malloc: %p", stackBase); */
-  /*   FillRect(0, y, kWidth, 16, 0); */
-  /*   PrintStr(0, y, message, 7); */
-  /* } */
 
   InitFifo8(&fifoTimer, sizeof(bufTimerFifo) / sizeof(unsigned char),
             bufTimerFifo);

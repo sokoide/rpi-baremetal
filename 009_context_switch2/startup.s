@@ -151,7 +151,8 @@ _IRQ_interrupt_context_switch:
   //-- irq mode
   sub sp, sp, #4*2
   pop {lr}
-  // restore spsr
+  // enable irq and restore spsr
+  bic lr, lr, #0x80
   msr spsr, lr // lr -> spsr
   // restore lr (user mode pc)
   pop {lr}
