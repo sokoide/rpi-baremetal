@@ -135,15 +135,16 @@ typedef struct _TIMER {
   unsigned int timeout;
   unsigned char data;
   bool used;
+  FIFO8 *fifo;
   struct _TIMER *next;
 } TIMER;
 
-void InitTimerInterrupt(FIFO8 *fifo);
-void InitTimerCtl(FIFO8 *fifo);
+void InitTimerInterrupt();
+void InitTimerCtl();
 int CreateTimer();
 void InitTimer(int id);
 void DeleteTimer(int id);
-int SetTimer(int id, unsigned int timeout, unsigned char data);
+int SetTimer(FIFO8 *fifo, int id, unsigned int timeout, unsigned char data);
 
 void InsertTimer(int id);
 bool RemoveTimer(int id);
@@ -152,7 +153,6 @@ TIMER *TimerAt(int index);
 typedef struct {
   unsigned int counter, next;
   unsigned int length;  // number of used timers
-  FIFO8 *fifo;
   TIMER timer[MAX_TIMERS];
   TIMER *head;
 } TIMERCTL;
