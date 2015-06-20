@@ -91,7 +91,7 @@ int main(int argc, char const* argv[]) {
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 0;
   const unsigned char timerData2 = 1;
-  int timerInterval1 = 40;  // TODO: BUG: Bug if you create 10 or 20ms timer
+  int timerInterval1 = 40;  // TODO: Bug when 10 or 20ms
   int timerInterval2 = 100;
   unsigned int counter2 = 0;
 
