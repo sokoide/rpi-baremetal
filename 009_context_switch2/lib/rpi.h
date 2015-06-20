@@ -144,6 +144,8 @@ void InitTimerCtl();
 int CreateTimer();
 void InitTimer(int id);
 void DeleteTimer(int id);
+void StartTimer();
+void StopTimer();
 int SetTimer(FIFO8 *fifo, int id, unsigned int timeout, unsigned char data);
 
 void InsertTimer(int id);
@@ -160,6 +162,7 @@ typedef struct {
 extern TIMERCTL timerctl;
 
 // thread ***
+extern volatile bool blockContextSwitch;
 #define MAX_THREADS 1024
 void InitThread();
 void CreateThread(void *thread_entry);

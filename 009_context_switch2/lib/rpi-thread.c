@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 THREADCTL threadctl;
+volatile bool blockContextSwitch = true;
 
 void InitThread() {
   threadctl.length = 1;
@@ -11,23 +12,21 @@ void InitThread() {
 
   threadctl.thread[0].stack = NULL;
   /* threadctl.thrad[0].stackSize = TBD; */
+  blockContextSwitch = false;
 }
 
 void CreateThread(void *thread_entry) {
   unsigned int id = threadctl.length;
   const unsigned int stackSize =
-      4096 * 16;  // 4096 * 16 * sizeof(int) allocated
+      4096 * 16;  // 256KB = 4096 * 16 * sizeof(int) allocated
   int *stackBase;
 
-  threadctl.length++;
   threadctl.thread[id].state = THREAD_CREATED;
   stackBase = (int *)malloc(stackSize * sizeof(int));
   stackBase += stackSize - 1;
   threadctl.thread[id].stack = stackBase;
   threadctl.thread[id].stackSize = stackSize;
 
-  // push default registers into the stack which will be poped in
-  // _context_switch
   *threadctl.thread[id].stack-- = 0x00000093;  // cpsr =IRQ enabled/FIQ & Thumb
                                                // disabled/Processor mode = SVC
   *threadctl.thread[id].stack-- = (int)thread_entry;  // r15: pc
@@ -46,6 +45,8 @@ void CreateThread(void *thread_entry) {
   *threadctl.thread[id].stack-- = 0;                  // r1
   *threadctl.thread[id].stack = 0;                    // r0
   // don't do stack--!
+
+  threadctl.length++;
 }
 
 unsigned int ContextSwitch(int sp) {

@@ -5,6 +5,8 @@ TIMERCTL timerctl;
 
 // called by _IRQ_interrupt in startup.s
 int* IRQ_handler(int lr, int sp) {
+  /* static bool shouldDoContextSwitch = false; */
+
   if (*INTERRUPT_IRQ_BASIC_PENDING & 0x01 != 0) {
     timerctl.counter++;
 
@@ -33,10 +35,14 @@ int* IRQ_handler(int lr, int sp) {
     char message[512];
 
     if (0 != timerctl.counter % 16) {
-      // clear interrupt flag
+      /* shouldDoContextSwitch = true; */
+      /* } */
+      /* if (false == shouldDoContextSwitch || true == blockContextSwitch) { */
       *TIMER_IRQ_CLR = 0;
       return NULL;
     }
+
+    /* shouldDoContextSwitch = false; */
     unsigned int currentId = threadctl.currentId;
     int y = 128;
 
@@ -171,8 +177,18 @@ void InitTimer(int id) {
   timerctl.timer[id].fifo = NULL;
 }
 
+void StopTimer() {
+  // stop timer
+  *TIMER_CONTROL &= ~0x00000080;
+}
+
+void StartTimer() {
+  // start timer
+  *TIMER_CONTROL |= 0x00000080;
+}
+
 int SetTimer(FIFO8* fifo, int id, unsigned int timeout, unsigned char data) {
-  _disable_IRQ();
+  /* blockContextSwitch = true; */
   unsigned int updatedTimeout = timerctl.counter + timeout;
 
   TIMER* t = &timerctl.timer[id];
@@ -187,7 +203,7 @@ int SetTimer(FIFO8* fifo, int id, unsigned int timeout, unsigned char data) {
     timerctl.next = updatedTimeout;
   }
 
-  _enable_IRQ();
+  /* blockContextSwitch = false; */
   return id;
 }
 

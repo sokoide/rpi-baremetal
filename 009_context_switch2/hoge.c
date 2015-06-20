@@ -91,7 +91,7 @@ int main(int argc, char const* argv[]) {
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 0;
   const unsigned char timerData2 = 1;
-  int timerInterval1 = 50;
+  int timerInterval1 = 40;  // TODO: BUG: Bug if you create 10 or 20ms timer
   int timerInterval2 = 100;
   unsigned int counter2 = 0;
 
@@ -102,7 +102,6 @@ int main(int argc, char const* argv[]) {
   timer2 = CreateTimer();
 
   // create threads
-  _disable_IRQ();
   // task_a -> thread 1
   CreateThread(task_a);
   sprintf(message, "* thread for task_a created, sp:%x, fp:%p",
@@ -116,7 +115,6 @@ int main(int argc, char const* argv[]) {
           threadctl.thread[2].stack, task_b);
   FillRect(0, 16, kWidth, 16, 0);
   PrintStr(0, 16, message, 7);
-  _enable_IRQ();
 
   SetTimer(&fifoTimer, timer1, timerInterval1, timerData1);
   SetTimer(&fifoTimer, timer2, timerInterval2, timerData2);
@@ -130,13 +128,13 @@ int main(int argc, char const* argv[]) {
     } else {
       unsigned char data = GetFifo8(&fifoTimer);
       switch (data) {
-        /* case (const int)timerData1: */
-        /*   SetTimer(&fifoTimer, timer1, timerInterval1, timerData1); */
-        /*   counter2++; */
-        /*   break; */
+        case (const int)timerData1:
+          SetTimer(&fifoTimer, timer1, timerInterval1, timerData1);
+          counter2++;
+          break;
         case (const int)timerData2:
           SetTimer(&fifoTimer, timer2, timerInterval2, timerData2);
-          draw_counter(0, counter2++);
+          draw_counter(0, counter2);
           break;
       }
     }
