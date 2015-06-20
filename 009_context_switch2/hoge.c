@@ -30,10 +30,6 @@ void task_a() {
   SetTimer(&fifoTimer, timer1, timerInterval1, timerData1);
 
   while (true) {
-    _disable_IRQ();
-    _wfi();
-    _enable_IRQ();
-
     if (StatusFifo8(&fifoTimer) == 0) {
     } else {
       unsigned char data = GetFifo8(&fifoTimer);
@@ -60,10 +56,6 @@ void task_b() {
   SetTimer(&fifoTimer, timer1, timerInterval1, timerData1);
 
   while (true) {
-    _disable_IRQ();
-    _wfi();
-    _enable_IRQ();
-
     if (StatusFifo8(&fifoTimer) == 0) {
     } else {
       unsigned char data = GetFifo8(&fifoTimer);
@@ -130,9 +122,9 @@ int main(int argc, char const* argv[]) {
   SetTimer(&fifoTimer, timer2, timerInterval2, timerData2);
 
   while (true) {
-    _disable_IRQ();
-    _wfi();
-    _enable_IRQ();
+    /* _disable_IRQ(); */
+    /* _wfi(); */
+    /* _enable_IRQ(); */
 
     if (StatusFifo8(&fifoTimer) == 0) {
     } else {

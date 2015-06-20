@@ -15,7 +15,8 @@ void InitThread() {
 
 void CreateThread(void *thread_entry) {
   unsigned int id = threadctl.length;
-  const unsigned int stackSize = 4096;  // 4096 * sizeof(int) allocated
+  const unsigned int stackSize =
+      4096 * 16;  // 4096 * 16 * sizeof(int) allocated
   int *stackBase;
 
   threadctl.length++;
