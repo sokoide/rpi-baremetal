@@ -48,7 +48,7 @@ void task_b() {
   FIFO8 fifoTimer;
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 1;
-  int timerInterval1 = 400;
+  int timerInterval1 = 500;
 
   InitFifo8(&fifoTimer, sizeof(bufTimerFifo) / sizeof(unsigned char),
             bufTimerFifo);
@@ -91,7 +91,7 @@ int main(int argc, char const* argv[]) {
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 0;
   const unsigned char timerData2 = 1;
-  int timerInterval1 = 40;  // TODO: Bug when 10 or 20ms
+  int timerInterval1 = 50;  // TODO: Bug when 10 or 20ms
   int timerInterval2 = 100;
   unsigned int counter2 = 0;
 
