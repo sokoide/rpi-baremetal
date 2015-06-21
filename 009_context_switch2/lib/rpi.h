@@ -31,6 +31,13 @@ extern caddr_t _get_stack_pointer(void);
 extern void _write_memory(char c);
 extern void _wfi();
 extern void _context_switch(int **from_sp, int **to_sp);
+extern void _lock_mutex_mmu(void *mutex);
+extern void _unlock_mutex_mmu(void *mutex);
+extern void _lock_mutex_swp(void *mutex);
+extern void _lock_mutex_simple(void *mutex);
+extern void _unlock_mutex_simple(void *mutex);
+#define _lock_mutex(a) _lock_mutex_simple((a))
+#define _unlock_mutex(a) _unlock_mutex_simple((a))
 
 // defined in hankaku.o *****
 extern char *_binary_hankaku_bin_start;
@@ -162,7 +169,9 @@ typedef struct {
 extern TIMERCTL timerctl;
 
 // thread ***
+extern unsigned int m;  // mutex
 extern volatile bool blockContextSwitch;
+
 #define MAX_THREADS 1024
 void InitThread();
 void CreateThread(void *thread_entry);

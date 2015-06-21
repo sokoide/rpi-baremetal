@@ -3,7 +3,10 @@
 #include <stdlib.h>
 
 THREADCTL threadctl;
+unsigned int m __attribute__((aligned(4)));
 volatile bool blockContextSwitch = true;
+volatile uint8_t SR_reg;
+volatile uint8_t SR_lock = 0x00U;
 
 void InitThread() {
   threadctl.length = 1;
@@ -12,6 +15,7 @@ void InitThread() {
 
   threadctl.thread[0].stack = NULL;
   /* threadctl.thrad[0].stackSize = TBD; */
+  m = 0;
   blockContextSwitch = false;
 }
 

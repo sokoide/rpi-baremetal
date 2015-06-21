@@ -22,7 +22,7 @@ void task_a() {
   FIFO8 fifoTimer;
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 1;
-  int timerInterval1 = 200;
+  int timerInterval1 = 100;
 
   InitFifo8(&fifoTimer, sizeof(bufTimerFifo) / sizeof(unsigned char),
             bufTimerFifo);
@@ -30,13 +30,13 @@ void task_a() {
   SetTimer(&fifoTimer, timer1, timerInterval1, timerData1);
 
   while (true) {
-    if (StatusFifo8(&fifoTimer) == 0) {
-    } else {
+    while (StatusFifo8(&fifoTimer) != 0) {
       unsigned char data = GetFifo8(&fifoTimer);
       switch (data) {
         case (const int)timerData1:
+          counter1++;
+          draw_counter(1, counter1);
           SetTimer(&fifoTimer, timer1, timerInterval1, timerData1);
-          draw_counter(1, counter1++);
           break;
       }
     }
@@ -48,7 +48,7 @@ void task_b() {
   FIFO8 fifoTimer;
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 1;
-  int timerInterval1 = 500;
+  int timerInterval1 = 100;
 
   InitFifo8(&fifoTimer, sizeof(bufTimerFifo) / sizeof(unsigned char),
             bufTimerFifo);
@@ -56,13 +56,13 @@ void task_b() {
   SetTimer(&fifoTimer, timer1, timerInterval1, timerData1);
 
   while (true) {
-    if (StatusFifo8(&fifoTimer) == 0) {
-    } else {
+    while (StatusFifo8(&fifoTimer) != 0) {
       unsigned char data = GetFifo8(&fifoTimer);
       switch (data) {
         case (const int)timerData1:
+          counter1++;
+          draw_counter(2, counter1);
           SetTimer(&fifoTimer, timer1, timerInterval1, timerData1);
-          draw_counter(2, counter1++);
           break;
       }
     }
@@ -91,7 +91,7 @@ int main(int argc, char const* argv[]) {
   unsigned char bufTimerFifo[64];
   const unsigned char timerData1 = 0;
   const unsigned char timerData2 = 1;
-  int timerInterval1 = 50;  // TODO: Bug when 10 or 20ms
+  int timerInterval1 = 50;  // TODO: Bug when 10 or 20ms, task_b will be skipped
   int timerInterval2 = 100;
   unsigned int counter2 = 0;
 
@@ -124,8 +124,7 @@ int main(int argc, char const* argv[]) {
     /* _wfi(); */
     /* _enable_IRQ(); */
 
-    if (StatusFifo8(&fifoTimer) == 0) {
-    } else {
+    while (StatusFifo8(&fifoTimer) > 0) {
       unsigned char data = GetFifo8(&fifoTimer);
       switch (data) {
         case (const int)timerData1:
@@ -133,8 +132,8 @@ int main(int argc, char const* argv[]) {
           counter2++;
           break;
         case (const int)timerData2:
-          SetTimer(&fifoTimer, timer2, timerInterval2, timerData2);
           draw_counter(0, counter2);
+          SetTimer(&fifoTimer, timer2, timerInterval2, timerData2);
           break;
       }
     }

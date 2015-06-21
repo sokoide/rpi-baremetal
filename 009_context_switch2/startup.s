@@ -1,4 +1,4 @@
-@ startup
+// startup
   .align
 
 .global _start
@@ -132,7 +132,7 @@ _IRQ_interrupt_context_switch:
   mov r4, sp // r4 <- r13_irq
 
   msr spsr, r1 // r1 -> spsr
-  cps #0x13          ;@ svc mode
+  cps #0x13          //@ svc mode
   //-- svc mode
   // change user mode stack to next thread's stack
   mov sp, r0
@@ -147,7 +147,7 @@ _IRQ_interrupt_context_switch:
   pop {r0-r12,lr}
   add sp, sp, #4*2 // pop pc, spsr
 
-  cps #0x12          ;@ irq mode
+  cps #0x12          //@ irq mode
   //-- irq mode
   sub sp, sp, #4*2
   pop {lr}
@@ -235,4 +235,71 @@ _write_memory:
 _wfi:
   wfi
 	bx lr
+
+// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dht0008a/ch01s03s02.html
+.equ  locked,   1
+.equ  unlocked, 0
+
+// BUG: lock_mutex hangs
+// LDREX doesn't work when MMU is disabled. Don't use this.
+// Declare for use from C as extern void lock_mutex(void * mutex);
+.global _lock_mutex_mmu
+_lock_mutex_mmu:
+  LDR     r1, =locked
+1:
+  LDREX   r2, [r0]
+  CMP     r2, r1        // Test if mutex is locked or unlocked
+  BEQ     2f
+  STREXNE r2, r1, [r0]  // Not locked, attempt to lock it
+  CMPNE   r2, #1        // Check if Store-Exclusive failed
+  BEQ     1b           // Failed - retry from 1
+  // Lock acquired
+  DMB                   // Required before accessing protected resource
+  BX      lr
+2:
+// Take appropriate action while waiting for mutex to become unlocked
+  //wfi
+  nop
+  B       1b           // Retry from 1
+
+
+// BUG: unlock_mutex
+// Declare for use from C as extern void unlock_mutex(void * mutex);
+.global _unlock_mutex_mmu
+_unlock_mutex_mmu:
+    LDR     r1, =unlocked
+    DMB                   // Required before releasing protected resource
+    STR     r1, [r0]      // Unlock mutex
+    // SIGNAL_UPDATE: none
+    BX      lr
+
+
+// BUG: SWP version
+// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dht0008a/CJHBGBBJ.html
+// still hangs
+.global _lock_mutex_swp
+_lock_mutex_swp:
+    LDR r2, =locked
+    SWP r1, r2, [r0]       // Swap R2 with location [R0], [R0] value placed in R1
+    CMP r1, r2             // Check if memory value was ‘locked’
+    BEQ _lock_mutex_swp     // If so, retry immediately
+    BX  lr                 // If not, lock successful, return
+
+// BUG: not really excusive when context swithes after ldr befor str
+.global _lock_mutex_simple
+_lock_mutex_simple:
+  ldr r1, =unlocked
+  ldr r3, =locked
+  ldr r2, [r0]
+  cmp r2, r3
+  beq _lock_mutex_simple
+  str r1, [r0]
+  bx lr
+
+.global _unlock_mutex_simple
+_unlock_mutex_simple:
+    LDR r1, =unlocked
+    STR r1, [r0]           // Write value ‘unlocked’ to location [R0]
+    BX  lr
+
 

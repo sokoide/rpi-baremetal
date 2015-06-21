@@ -65,21 +65,25 @@ int* IRQ_handler(int lr, int sp) {
     FillRect(0, y, kWidth, 16, 0);
     PrintStr(0, y, message, 7);
     y += 16;
-    sprintf(message, "r0=%x,r1=%x,r2=%x,r3=%x,r4=%x,r5=%x,r6=%x",
+    sprintf(message, "r0=%x,r1=%x,r2=%x,r3=%x,r4=%x",
             *(threadctl.thread[nextId].stack),
             *(threadctl.thread[nextId].stack + 1),
             *(threadctl.thread[nextId].stack + 2),
             *(threadctl.thread[nextId].stack + 3),
-            *(threadctl.thread[nextId].stack + 4),
-            *(threadctl.thread[nextId].stack + 5),
-            *(threadctl.thread[nextId].stack + 6));
+            *(threadctl.thread[nextId].stack + 4));
     FillRect(0, y, kWidth, 16, 0);
     PrintStr(0, y, message, 7);
     y += 16;
-    sprintf(message, "r7=%x,r8=%x,r9=%x,r10=%x,r11=%x,r12=%x,lr=0x%x,pc=0x%x",
+    sprintf(message, "r5=%x,r6=%x,r7=%x,r8=%x,r9=%x",
+            *(threadctl.thread[nextId].stack + 5),
+            *(threadctl.thread[nextId].stack + 6),
             *(threadctl.thread[nextId].stack + 7),
             *(threadctl.thread[nextId].stack + 8),
-            *(threadctl.thread[nextId].stack + 9),
+            *(threadctl.thread[nextId].stack + 9));
+    FillRect(0, y, kWidth, 16, 0);
+    PrintStr(0, y, message, 7);
+    y += 16;
+    sprintf(message, "r10=%x,r11=%x,r12=%x,r1r=%x,pc=%x",
             *(threadctl.thread[nextId].stack + 10),
             *(threadctl.thread[nextId].stack + 11),
             *(threadctl.thread[nextId].stack + 12),
@@ -177,18 +181,22 @@ void InitTimer(int id) {
   timerctl.timer[id].fifo = NULL;
 }
 
+// BUG:
 void StopTimer() {
   // stop timer
   *TIMER_CONTROL &= ~0x00000080;
 }
 
+// BUG:
 void StartTimer() {
   // start timer
   *TIMER_CONTROL |= 0x00000080;
 }
 
 int SetTimer(FIFO8* fifo, int id, unsigned int timeout, unsigned char data) {
+  _lock_mutex(&m);
   blockContextSwitch = true;
+  _unlock_mutex(&m);
   unsigned int updatedTimeout = timerctl.counter + timeout;
 
   TIMER* t = &timerctl.timer[id];
@@ -203,7 +211,9 @@ int SetTimer(FIFO8* fifo, int id, unsigned int timeout, unsigned char data) {
     timerctl.next = updatedTimeout;
   }
 
+  _lock_mutex(&m);
   blockContextSwitch = false;
+  _unlock_mutex(&m);
   return id;
 }
 
