@@ -114,4 +114,9 @@ This version is not using timer interrupt but using busy loop for intervals.
 * When context switches per timer interrupt, it pushes the current registers for the thread, and save the stack pointer in the thread context
 * main -> other thread is switched by timer interrupt, but task_a/task_b to other is not timer based. Those context switches will be fully automatic in the next example.
 
+#### 009_context_switch2
+##### About
+* Implemented preemptive multi-tasking by using timer interrupt
+* Bug: If you use timer which is <20ms, it may hide the current/other thread's PrintStr
+* Couldn't use ldrex/strex/swp and it uses buggy critical secrtion (not actually mutually exclusive)
 
